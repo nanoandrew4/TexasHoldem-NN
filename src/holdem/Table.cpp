@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../headers/Table.h"
+#include "../../headers/holdem/Table.h"
 
 Table::Table(Player** players, uint numOfPlayers) {
     if (numOfPlayers < 2) {
@@ -78,7 +78,41 @@ void Table::play() {
             playRound(r + 1u);
         }
 
-        // show();
+        int bestType = HC;
+        // Compare hands
+        std::vector<int*> bestHands;
+        for (uint p = 0; p < numOfPlayers; p++) {
+            if (players[p]->isPlaying()) {
+                bestHands.push_back(players[p]->hand->score(p, flop));
+                if (bestHands.back()[1] < bestType)
+                    bestType = bestHands.back()[1];
+            }
+        }
+
+        // Active players
+        for (ulong ap = 0; ap < bestHands.size();) {
+            if (bestHands.at(ap)[1] > bestType)
+                bestHands.erase(bestHands.begin() + ap);
+            else
+                ap++;
+        }
+
+        // If players have same hand type, compare values to determine winner
+        for (int hs = 2; bestHands.size() > 1 && hs < 9; hs++)
+            for (ulong h = 0; h < bestHands.size() - 1;) {
+                if (bestHands.at(h)[hs] > bestHands.at(h + 1)[hs])
+                    bestHands.erase(bestHands.begin() + h + 1);
+                else if (bestHands.at(h)[hs] < bestHands.at(h + 1)[hs])
+                    bestHands.erase(bestHands.begin() + h);
+                else
+                    h++;
+            }
+
+        // Split pot
+        for (int wp = 0; wp < bestHands.size(); wp++) {
+            players[bestHands.at(wp)[0]]->collectWinnings(pot / (bestHands.size() - wp));
+            pot -= pot / (bestHands.size() - wp);
+        }
 
         for (int p = 0; p < numOfPlayers; p++)
             delete players[p]->hand;

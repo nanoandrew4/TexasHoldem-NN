@@ -17,6 +17,7 @@ public:
     std::function<int(int)> play;
 
     void anteUp(int ante);
+    void collectWinnings(uint winnings);
     uint getMoney();
     void newRound();
 

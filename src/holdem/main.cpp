@@ -1,7 +1,7 @@
 #include <iostream>
-#include "../headers/Deck.h"
-#include "../headers/Player.h"
-#include "../headers/Table.h"
+#include "../../headers/holdem/Deck.h"
+#include "../../headers/holdem/Player.h"
+#include "../../headers/holdem/Table.h"
 
 
 int main() {

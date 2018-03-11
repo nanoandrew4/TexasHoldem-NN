@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../headers/Player.h"
+#include "../../headers/holdem/Player.h"
 
 Player::Player() {
 
@@ -10,9 +10,14 @@ Player::~Player() = default;
 void Player::humanPlayer() {
     this->play = [this] (int costToCall) -> int {
         std::cout << "Your hand: "; hand->displayHand();
-        std::cout << "Enter 'f' to fold, 'c' to call or 'r' to raise" << std::endl;
-        char opt;
-        std::cin >> opt;
+        char opt = ' ';
+
+        do {
+            std::cout << "Enter 'f' to fold, 'c' to call or 'r' to raise" << std::endl;
+            std::cin >> opt;
+        } while (opt != 'f' && opt != 'c' && opt != 'r');
+
+        // error trap
 
         switch (opt) {
             case 'r':
@@ -38,6 +43,10 @@ void Player::humanPlayer() {
 
 void Player::anteUp(int ante) {
     this->money -= ante;
+}
+
+void Player::collectWinnings(uint winnings) {
+    money += winnings;
 }
 
 uint Player::getMoney() {

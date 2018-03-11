@@ -1,0 +1,10 @@
+#ifndef TEXAS_HOLDEM_NN_HOLDEMTEST_H
+#define TEXAS_HOLDEM_NN_HOLDEMTEST_H
+
+
+class HoldemTest {
+
+};
+
+
+#endif //TEXAS_HOLDEM_NN_HOLDEMTEST_H

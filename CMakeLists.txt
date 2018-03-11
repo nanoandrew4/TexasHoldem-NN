@@ -3,4 +3,4 @@ project(Texas_Holdem_NN)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(Texas_Holdem_NN src/main.cpp src/Hand.cpp headers/Hand.h src/Deck.cpp headers/Deck.h src/Table.cpp headers/Table.h src/Card.cpp headers/Card.h src/Player.cpp headers/Player.h)
+add_executable(Texas_Holdem_NN src/holdem/main.cpp src/holdem/Hand.cpp headers/holdem/Hand.h src/holdem/Deck.cpp headers/holdem/Deck.h src/holdem/Table.cpp headers/holdem/Table.h src/holdem/Card.cpp headers/holdem/Card.h src/holdem/Player.cpp headers/holdem/Player.h src/test/HoldemTest.cpp headers/test/HoldemTest.h)
