@@ -2,83 +2,131 @@
 #include "../../headers/holdem/Hand.h"
 
 Hand::Hand(Card* c1, Card* c2) {
-    this->cards[0] = c1; this->cards[1] = c2;
+    this->pocket[0] = c1; this->pocket[1] = c2;
 }
 
 Hand::~Hand() {
-    for (auto &card : cards) delete card;
+    for (auto &card : pocket) delete card;
 }
 
-void Hand::displayHand() {
-    std::cout << cards[0]->cardValue << cards[0]->getSuitSymbol() << " | "
-              << cards[1]->cardValue << cards[1]->getSuitSymbol() << std::endl;
+/**
+ * Displays an array of card pointers, so the user can see what is going on.
+ * Note that all values represented in code are shifted one to the left, so a value of 2 actually represents a 3. This
+ * is done to enable wrapping of the Ace around.
+ *
+ * @param cards Array of pointers to cards to display
+ * @param numOfCards Number of cards to be displayed
+ */
+void Hand::displayHand(Card* cards[], int numOfCards) {
+    for (int c = 0; c < numOfCards; c++) {
+        if (cards[c]->cardValue > 10) {
+            if (cards[c]->cardValue == 11)
+                std::cout << "J";
+            else if (cards[c]->cardValue == 12)
+                std::cout << "Q";
+            else if (cards[c]-> cardValue == 13)
+                std::cout << "K";
+            else if (cards[c]->cardValue == 14)
+                std::cout << "A";
+            std::cout << cards[c]->getSuitSymbol() << (numOfCards - c != 1 ? " | " : "\n");
+        } else
+            std::cout << cards[c]->cardValue << cards[c]->getSuitSymbol() << (numOfCards - c != 1 ? " | " : "\n");
+    }
 }
 
-int* Hand::score(uint playerNum, Card* flop[]) {
+void Hand::score(int playerNum, Card* flop[], int topHand[]) {
     // Check for flush, straight and # of cards. All else can be determined from this
-
-    int topHand[9] = {0};
     topHand[0] = playerNum;
 
     Card* cards[7];
-    cards[0] = this->cards[0];
-    cards[1] = this->cards[1];
+    cards[0] = this->pocket[0];
+    cards[1] = this->pocket[1];
     for (int f = 0; f < 5; f++)
         cards[f + 2] = flop[f];
 
-    quicksortByVal(cards, 7, 0, 7);
+    quicksortByVal(cards, 0, 6);
 
-    int* straightRes = straight(cards);
-    int* flushRes = flush(cards);
-    int* sameValRes = sameVal(cards);
+    std::cout << "Evaluating: ";
+    displayHand(cards, 7);
+
+    int straightRes[6] = {0};
+    straight(cards, straightRes);
+    int flushRes[8] = {0};
+    flush(cards, straightRes, flushRes);
+
+//    for (int i = 0; i < 8; i++)
+//        std::cout << flushRes[i] << " ";
+//    std::cout << std::endl;
+//    for (int i = 0; i < 6; i++)
+//        std::cout << straightRes[i] << " ";
+//    std::cout << std::endl;
+
+    int sameValRes[6] = {0};
+    sameVal(cards, sameValRes);
 
     if (straightRes[0] == 1 && flushRes[0] == 1) { // Verify straight flush (and royal flush)
-        for (int c = 0; c <= 2; c++) {
-            if (cards[c]->cardValue == straightRes[1] && ((c == 0 && flushRes[6] == 0 && flushRes[7] == 0) ||
-               (c == 1 && flushRes[0] == 0 && flushRes[7] == 0) || (c == 2 && flushRes[0] == 0 && flushRes[1] == 0))) {
-                topHand[1] = STR_FLUSH;
-                topHand[2] = cards[c]->cardValue;
+        for (int c = 0; c < 4; c++) {
+            if (cards[c]->cardValue == straightRes[1]) {
+                int matches = 0;
+                for (int cc = 0; cc < 7; cc++)
+                    if (cards[cc]->cardValue == straightRes[matches++ + 1] && cards[cc]->suit == flushRes[cc + 1])
+                        matches++;
+                if (matches >= 5) {
+                    topHand[1] = STR_FLUSH;
+                    topHand[2] = cards[c]->cardValue;
+                    std::cout << "Straight flush | High: " << cards[c]->cardValue << std::endl;
+                    return;
+                }
             }
         }
-    } else if (sameValRes[0] == 4) { // 4 of a kind
+    }
+
+    if (sameValRes[0] == 4) { // 4 of a kind
         topHand[1] = FOUR_OAK;
         topHand[2] = sameValRes[1]; // Value of four of a kind
         topHand[3] = sameValRes[2]; // Kicker
+        std::cout << "Four of a kind | High " << sameValRes[1] << " | Kicker: " << sameValRes[2] << std::endl;
     } else if (sameValRes[0] == 32) { // Full house
         topHand[1] = FH;
         topHand[2] = sameValRes[1]; // Value of three of a kind
         topHand[3] = sameValRes[2]; // Value of pair
+        std::cout << "Full house | High TOAK " << sameValRes[1] << " | High pair: " << sameValRes[2] << std::endl;
     } else if (flushRes[0] == 1) { // Flush
         topHand[1] = FLUSH;
         for (int c = 0; c < 7; c++)
             topHand[c + 2] = cards[c]->cardValue; // Copy all card values in case multiple players have a flush
+        std::cout << "Flush" << std::endl;
     } else if (straightRes[0] == 1) { // Straight
         topHand[1] = STRT;
         topHand[2] = straightRes[1]; // Highest card in the straight
+        std::cout << "Straight | High in straight: " << straightRes[1] << std::endl;
     } else if (sameValRes[0] == 3) { // Three of a kind
         topHand[1] = THREE_OAK;
         for (int svr = 1; svr < 4; svr++) // Copy over what the value of the match is, along with two kickers
             topHand[svr + 1] = sameValRes[svr];
+        std::cout << "Three of a kind | High: " << sameValRes[1] << " | Kicker: " << sameValRes[2] << " | Second kicker: " << sameValRes[3] << std::endl;
     } else if (sameValRes[0] == 22) { // Two pairs
         topHand[1] = TWO_PAIR;
         for (int svr = 1; svr < 5; svr++) // Copy over values of two pairs, and two kickers
             topHand[svr + 1] = sameValRes[svr];
+        std::cout << "Two pairs | High pair: " << sameValRes[1] << " | Low pair: " << sameValRes[2] << " | Kicker: " << sameValRes[3] << " | Second kicker: " << sameValRes[4] << std::endl;
     } else if (sameValRes[0] == 2) { // Pair
         topHand[1] = PAIR;
         for (int svr = 1; svr < 5; svr++) // Copy over value of pair and three kickers
             topHand[svr + 1] = sameValRes[svr];
+        std::cout << "Pair | High: " << sameValRes[1] << " | Kicker: " << sameValRes[2] << " | Second kicker: " << sameValRes[3] << " | Third kicker: " << sameValRes[4] << std::endl;
     } else { // High card
         topHand[1] = HC;
         for (int c = 0; c < 7; c++) // Copy over all cards, for comparison
             topHand[c + 2] = cards[c]->cardValue;
+        std::cout << "High card" << std::endl;
     }
 
-    return topHand;
+    std::cout << std::endl;
 }
 
-int* Hand::sameVal(Card* cards[]) {
+int* Hand::sameVal(Card* cards[], int results[]) {
     // Pairs check
-    int results[6] = {0};
     int vals[13] = {0};
 
     for (int c = 0; c < 7; c++)
@@ -86,13 +134,13 @@ int* Hand::sameVal(Card* cards[]) {
 
     int coi[2] {0};
 
-    for (int c = 1; c < 13; c++) {
+    for (int c = 1; c < 13; c++) { // Needs revising
         for (int cois = 0; cois < 2; cois++) {
             if (vals[c] >= vals[coi[cois]]) {
                 if (cois == 0) {
                     coi[1] = coi[0];
                     coi[0] = c;
-                } else
+                } else if (c < coi[1])
                     coi[1] = c;
             }
         }
@@ -103,7 +151,7 @@ int* Hand::sameVal(Card* cards[]) {
     if (coi[0] == 4)
         coi[1] = coi[0];
 
-    if (coi[0] != 3 && coi[1] != 2) {
+    if (coi[0] != 3 || coi[1] != 2) {
         int k = 0;
         for (int c = 0; c < 7; c++)
             if (cards[c]->cardValue != coi[0] && cards[c]->cardValue != coi[1])
@@ -146,21 +194,28 @@ int* Hand::sameVal(Card* cards[]) {
  * @param cards Cards to be evaluated
  * @return Array representing straight and indicating that one exists
  */
-int* Hand::straight(Card* cards[]) {
+int* Hand::straight(Card* cards[], int results[]) {
     // Straight check
 
-    int results[6] = {0};
-
     int seq = 0;
-    for (int v = 1; v < 7; v++) { // TODO: ACE AS 1
+    for (int v = 1; v < 7; v++) {
         if (cards[v - 1]->cardValue - cards[v]->cardValue == 1)
             seq++;
-        else
+        else if (cards[v - 1]->cardValue - cards[v]->cardValue != 0)
             seq = 0;
-        if (seq > 4) {
+        if (v == 6 && cards[0]->cardValue == 14 && cards[6]->cardValue - 1 == 1) {
+            seq++;
+            v++;
+        }
+        if (seq > 3) {
             results[0] = 1;
-            for (int c = v - 5; c < v; c++)
-                results[c + 1] = cards[c]->cardValue;
+            int pos = 1;
+            for (int c = v - 5; c <= v; c++)
+                if (results[pos - 1] != cards[c % 7]->cardValue)
+                    results[pos++] = cards[c % 7]->cardValue;
+
+            if (results[5] == 14)
+                results[5] = 1;
             break;
         }
     }
@@ -168,10 +223,9 @@ int* Hand::straight(Card* cards[]) {
     return results;
 }
 
-int* Hand::flush(Card* cards[]) {
+int* Hand::flush(Card* cards[], int straightRes[], int results[]) {
     // Flush check
 
-    int results[8] = {0};
     int suits[4] = {0};
 
     for (int c = 0; c < 7; c++) {
@@ -182,11 +236,21 @@ int* Hand::flush(Card* cards[]) {
     for (int s = 0; s < 4; s++) {
         if (suits[s] > 4) {
             results[0] = 1;
-            for (int c = 0; c < 7; c++) {
-                if (cards[c]->suit == s)
-                    results[c + 1] = 1;
-                else
-                    results[c + 1] = 0;
+            if (straightRes[0] == 0 || straightRes[1] == 14) {
+                for (int c = 0; c < 7; c++) {
+                    if (cards[c]->suit == s)
+                        results[c + 1] = 1;
+                    else
+                        results[c + 1] = 0;
+                }
+            } else if (straightRes[0] == 1 && straightRes[1] != 14) {
+                int aces = /*cards[0]->suit == s ? 1 : cards[1]->suit == s ? 2 : */0; // TODO: NEEDS TESTING
+                for (int c = 0; c < 7; c++) {
+                    if (cards[(c + aces) % 7]->suit == s)
+                        results[c + 1] = 1;
+                    else
+                        results[c + 1] = 0;
+                }
             }
         }
     }
@@ -194,14 +258,14 @@ int* Hand::flush(Card* cards[]) {
     return results;
 }
 
-void Hand::quicksortByVal(Card* cards[], uint size, uint lPiv, uint rPiv) {
-    int pivot = size / 2;
-    uint a = lPiv, b = rPiv;
+void Hand::quicksortByVal(Card* cards[], int lPiv, int rPiv) {
+    int pivot = cards[lPiv + (rPiv - lPiv) / 2]->cardValue;
+    int a = lPiv, b = rPiv;
 
     while (a <= b) {
-        while (cards[a] < cards[pivot])
+        while (cards[a]->cardValue > pivot)
             a++;
-        while (cards[b] > cards[pivot])
+        while (cards[b]->cardValue < pivot)
             b--;
         if (a <= b) {
             Card* c = cards[a];
@@ -213,8 +277,7 @@ void Hand::quicksortByVal(Card* cards[], uint size, uint lPiv, uint rPiv) {
     }
 
     if (lPiv < b)
-        quicksortByVal(cards, size, lPiv, b);
+        quicksortByVal(cards, lPiv, b);
     if (a < rPiv)
-        quicksortByVal(cards, size, lPiv, b);
-
+        quicksortByVal(cards, a, rPiv);
 }

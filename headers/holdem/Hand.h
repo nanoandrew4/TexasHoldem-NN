@@ -9,20 +9,20 @@ enum Hands {
 
 class Hand {
 private:
-    void quicksortByVal(Card*[], uint, uint, uint);
+    void quicksortByVal(Card*[], int, int);
 
-    int* sameVal(Card*[]);
-    int* straight(Card*[]);
-    int* flush(Card*[]);
+    int* sameVal(Card*[], int[]);
+    int* straight(Card*[], int[]);
+    int* flush(Card*[], int[], int[]);
 
 public:
-    Card* cards[2];
+    Card* pocket[2];
     Hand(Card* c1, Card* c2);
     ~Hand();
 
-    void displayHand();
+    void displayHand(Card*[], int numOfCards = 2);
 
-    int* score(uint, Card*[]);
+    void score(int, Card*[], int[]);
 };
 
 

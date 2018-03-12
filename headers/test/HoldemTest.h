@@ -2,8 +2,11 @@
 #define TEXAS_HOLDEM_NN_HOLDEMTEST_H
 
 
-class HoldemTest {
+#include "../holdem/Card.h"
 
+class HoldemTest {
+public:
+    void test();
 };
 
 

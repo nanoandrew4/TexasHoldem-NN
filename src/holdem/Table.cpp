@@ -81,9 +81,11 @@ void Table::play() {
         int bestType = HC;
         // Compare hands
         std::vector<int*> bestHands;
+        int activPlayer = 0;
         for (uint p = 0; p < numOfPlayers; p++) {
             if (players[p]->isPlaying()) {
-                bestHands.push_back(players[p]->hand->score(p, flop));
+                bestHands.push_back(new int[9]);
+                players[p]->hand->score(p, flop, bestHands.at(activPlayer++));
                 if (bestHands.back()[1] < bestType)
                     bestType = bestHands.back()[1];
             }

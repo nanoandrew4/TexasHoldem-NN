@@ -9,7 +9,7 @@ Player::~Player() = default;
 
 void Player::humanPlayer() {
     this->play = [this] (int costToCall) -> int {
-        std::cout << "Your hand: "; hand->displayHand();
+        std::cout << "Your hand: "; hand->displayHand(hand->pocket);
         char opt = ' ';
 
         do {

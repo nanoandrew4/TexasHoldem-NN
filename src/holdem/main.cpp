@@ -2,9 +2,11 @@
 #include "../../headers/holdem/Deck.h"
 #include "../../headers/holdem/Player.h"
 #include "../../headers/holdem/Table.h"
+#include "../../headers/test/HoldemTest.h"
 
 
 int main() {
+    /*
     Player* players[4] = {new Player(), new Player(), new Player(), new Player()};
     players[0]->humanPlayer();
     players[1]->humanPlayer();
@@ -17,6 +19,9 @@ int main() {
     delete players[1];
     delete players[2];
     delete players[3];
+    */
 
+    HoldemTest t;
+    t.test();
     return 0;
 }
