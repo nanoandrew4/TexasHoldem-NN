@@ -1,5 +1,8 @@
 #include "../../headers/test/HoldemTest.h"
 #include "../../headers/holdem/Hand.h"
+#include "../../headers/holdem/Player.h"
+#include "../../headers/AIPlayer.h"
+#include "../../headers/holdem/Table.h"
 
 void HoldemTest::test() {
     Suit SPADES = Suit::SPADES, CLUBS = Suit::CLUBS, HEARTS = Suit::HEARTS, DIAMONDS = Suit::DIAMONDS;
@@ -13,12 +16,20 @@ void HoldemTest::test() {
                        new Hand(new Card(HEARTS, 9), new Card(DIAMONDS, 11)),
                        new Hand(new Card(HEARTS, 14), new Card(CLUBS, 14))};
 
-    int scores[5][9];
-    for (int h = 0; h < 5; h++)
-        hands[h]->score(h, flop, scores[h]);
+//    int scores[5][9];
+//    for (int h = 0; h < 5; h++)
+//        hands[h]->score(h, flop, scores[h]);
+
+    Player* players[5];
+    for (int p = 0; p < 5; p++)
+        players[p] = new AIPlayer();
+
+    Table t(players, 5);
+    t.play();
 
     for (int h = 0; h < 5; h++) {
         delete hands[h];
         delete flop[h];
+        delete players[h];
     }
 }

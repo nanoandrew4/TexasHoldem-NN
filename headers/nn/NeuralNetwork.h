@@ -18,6 +18,7 @@ private:
 
     void forward(double[]);
     double sigmoid(double);
+    double invSigmoid(double);
 };
 
 

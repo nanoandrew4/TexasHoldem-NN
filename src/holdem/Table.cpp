@@ -74,11 +74,12 @@ void Table::play() {
                 for (int f = 0; f < 3; f++)
                     flop[f] = deck.deal();
             else
-                flop[2 + br] = deck.deal();
+                flop[br + 2] = deck.deal();
             playRound(r + 1u);
         }
 
         int bestType = HC;
+
         // Compare hands
         std::vector<int*> bestHands;
         int activPlayer = 0;
@@ -130,16 +131,16 @@ void Table::playRound(uint startPlayer) {
 
     do {
         if (players[p]->isPlaying()) {
-            int opt = players[p]->playTurn(lastRaise);
+            int tableInfo[activePlayers - 1 + 4];
+            getTableInfo(tableInfo);
+            int opt = players[p]->play(tableInfo);
             if (opt == -1) {
                 activePlayers--;
                 for (int np = 0; np < numOfPlayers; np++)
                     if (players[(p + numOfPlayers - np) % numOfPlayers]->isPlaying())
                         lastPlayerRaised = (p + np) % numOfPlayers;
             }
-//            if (opt == 0)
-//                pot += lastRaise;
-            else if (opt > 0) {
+            else if (opt > lastRaise) { // TODO: NEEDS REVIEWING
                 lastRaise = (uint) opt;
                 lastPlayerRaised = (uint) (p);
             }
@@ -155,4 +156,15 @@ void Table::playRound(uint startPlayer) {
             players[p]->anteUp(lastRaise);
             pot += lastRaise;
         }
+}
+
+void Table::getTableInfo(int tableInfo[]) {
+    tableInfo[0] = lastRaise;
+    tableInfo[1] = pot;
+    tableInfo[2] = activePlayers - 1; // Alternatively use numOfPlayers
+    tableInfo[3] = 0; // To be filled in by AIPlayer
+    int opp = 0;
+    for (int p = 0; p < numOfPlayers; p++)
+        if (players[p]->isPlaying())
+            tableInfo[opp++] = players[p]->getMoney();
 }

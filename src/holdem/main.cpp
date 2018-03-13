@@ -3,6 +3,7 @@
 #include "../../headers/holdem/Player.h"
 #include "../../headers/holdem/Table.h"
 #include "../../headers/test/HoldemTest.h"
+#include "../../headers/nn/NNEvolver.h"
 
 
 int main() {
@@ -23,5 +24,7 @@ int main() {
 
     HoldemTest t;
     t.test();
+
+//    NNEvolver nnEvolver;
     return 0;
 }

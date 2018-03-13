@@ -3,6 +3,7 @@
 
 #include <functional>
 #include "Hand.h"
+#include "../nn/NeuralNetwork.h"
 
 class Player {
 public:
@@ -13,18 +14,16 @@ public:
 
     Hand* hand;
 
-    virtual int playTurn(int costToCall) { return play(costToCall);};
-    std::function<int(int)> play;
-
     void anteUp(int ante);
     void collectWinnings(uint winnings);
     uint getMoney();
     void newRound();
 
-    void humanPlayer();
-private:
+    virtual int play(int[]);
+
     uint money = 1000;
     bool playing = true;
+private:
 };
 
 

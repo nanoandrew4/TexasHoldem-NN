@@ -10,24 +10,51 @@ NeuralNetwork::NeuralNetwork(int neuronsPerLayer[], const int layers) {
     this->neuronsPerLayer = neuronsPerLayer;
 
     // Initialize neurons
-    for (int i = 0; i < layers; i++)
-        activ[i] = new double[neuronsPerLayer[i]];
+    for (int l = 0; l < layers; l++)
+        activ[l] = new double[neuronsPerLayer[l]];
 
     // Initialize weights connecting the various neurons randomly (between ~0-1)
-    for (int i = 0; i < layers - 1; i++) {
-        weights[i] = new double *[neuronsPerLayer[i]];
-        for (int l = 0; l < neuronsPerLayer[i]; l++) {
-            weights[i][l] = new double[neuronsPerLayer[l + 1]];
-            for (int nl = 0; nl < neuronsPerLayer[i + 1]; nl++)
-                weights[i][l][nl] = 1.0 / (double)(mt_rand() % 100000 + 1);
+    for (int l = 0; l < layers - 1; l++) {
+        weights[l] = new double *[neuronsPerLayer[l]];
+        for (int n = 0; n < neuronsPerLayer[l]; n++) {
+            weights[l][n] = new double[neuronsPerLayer[l + 1]];
+            for (int nn = 0; nn < neuronsPerLayer[l + 1]; nn++)
+                weights[l][n][nn] = 1.0 / (double)(mt_rand() % 100000 + 1);
         }
     }
 }
 
+// Cleanup
+NeuralNetwork::~NeuralNetwork() {
+    for (int l = 0; l < layers; l++)
+        delete activ[l];
+    delete activ;
+
+    delete neuronsPerLayer;
+
+    for (int l = 0; l < layers - 1; l++) {
+        for (int n = 0; n < neuronsPerLayer[l]; n++)
+            delete weights[l][n];
+        delete weights[l];
+    }
+    delete weights;
+}
+
+// Sigmoid function (standard in NN implementations)
 double NeuralNetwork::sigmoid(double d) {
     return (1.0 / (1.0 + exp(-d)));
 }
 
+// Inverse sigmoid (reverses the sigmoid operation, used for raises)
+double NeuralNetwork::invSigmoid(double d) {
+    return -log((1 / d) - 1);
+}
+
+/**
+ * Forward propagates through the network, using a given set of inputs.
+ *
+ * @param input Inputs to use for propagation
+ */
 void NeuralNetwork::forward(double input[]) {
 
     // Zero all activations in preparation for data ingestion
@@ -37,7 +64,7 @@ void NeuralNetwork::forward(double input[]) {
 
     // Copy input data to input layer
     for (int n = 0; n < neuronsPerLayer[0]; n++)
-        activ[0][n] = input[n];
+        activ[0][n] = sigmoid(input[n]);
 
     // Forward propagate to all layers
     for (int l = 1; l < layers; l++) {
@@ -49,6 +76,12 @@ void NeuralNetwork::forward(double input[]) {
     }
 }
 
+/**
+ * Returns the neuron that activated (which is the action the network would like to be performed)
+ *
+ * @param input First layer inputs, should be constant in size
+ * @return Index of activated neuron
+ */
 int NeuralNetwork::getAction(double input[]) {
     forward(input);
 
@@ -57,5 +90,8 @@ int NeuralNetwork::getAction(double input[]) {
         if (activ[layers - 1][n] > activ[layers - 1][maxIndex])
             maxIndex = n;
 
-    return maxIndex;
+    if (maxIndex == 2)
+        return (int)(invSigmoid(activ[layers - 1][maxIndex]));
+
+    return maxIndex - 1;
 }

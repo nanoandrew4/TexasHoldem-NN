@@ -13,6 +13,7 @@ public:
     void play();
 private:
     void playRound(uint);
+    void getTableInfo(int[]);
 
     Card* flop[5];
 
