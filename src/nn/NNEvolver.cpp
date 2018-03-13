@@ -1,6 +1,6 @@
 #include <iostream>
 #include "../../headers/nn/NNEvolver.h"
-#include "../../headers/AIPlayer.h"
+#include "../../headers/nn/AIPlayer.h"
 #include "../../headers/holdem/Table.h"
 
 NNEvolver::NNEvolver() {

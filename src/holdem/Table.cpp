@@ -72,9 +72,9 @@ void Table::play() {
         for (int br = 0; br < 3 && activePlayers > 1; br++) {
             if (br == 0)
                 for (int f = 0; f < 3; f++)
-                    flop[f] = deck.deal();
+                    communityCards[f] = deck.deal();
             else
-                flop[br + 2] = deck.deal();
+                communityCards[br + 2] = deck.deal();
             playRound(r + 1u);
         }
 
@@ -86,7 +86,7 @@ void Table::play() {
         for (uint p = 0; p < numOfPlayers; p++) {
             if (players[p]->isPlaying()) {
                 bestHands.push_back(new int[9]);
-                players[p]->hand->score(p, flop, bestHands.at(activPlayer++));
+                players[p]->hand->recordBestHand(p, communityCards, bestHands.at(activPlayer++));
                 if (bestHands.back()[1] < bestType)
                     bestType = bestHands.back()[1];
             }
@@ -132,7 +132,7 @@ void Table::playRound(uint startPlayer) {
     do {
         if (players[p]->isPlaying()) {
             int tableInfo[activePlayers - 1 + 4];
-            getTableInfo(tableInfo);
+            getTableInfo(tableInfo, players[p]);
             int opt = players[p]->play(tableInfo);
             if (opt == -1) {
                 activePlayers--;
@@ -158,13 +158,13 @@ void Table::playRound(uint startPlayer) {
         }
 }
 
-void Table::getTableInfo(int tableInfo[]) {
+void Table::getTableInfo(int tableInfo[], Player* currPlayer) {
     tableInfo[0] = lastRaise;
     tableInfo[1] = pot;
     tableInfo[2] = activePlayers - 1; // Alternatively use numOfPlayers
     tableInfo[3] = 0; // To be filled in by AIPlayer
     int opp = 0;
     for (int p = 0; p < numOfPlayers; p++)
-        if (players[p]->isPlaying())
+        if (players[p]->isPlaying() && players[p] != currPlayer)
             tableInfo[opp++] = players[p]->getMoney();
 }

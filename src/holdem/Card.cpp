@@ -1,10 +1,6 @@
 #include "../../headers/holdem/Card.h"
 
 Card::Card(Suit s, int val) {
-    if (s == Suit::CLUBS || s == Suit::SPADES)
-        color = 'b';
-    else
-        color = 'r';
     this->suit = s;
     this->cardValue = val;
 }

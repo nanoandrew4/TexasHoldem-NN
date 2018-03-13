@@ -1,7 +1,7 @@
 #include "../../headers/test/HoldemTest.h"
 #include "../../headers/holdem/Hand.h"
 #include "../../headers/holdem/Player.h"
-#include "../../headers/AIPlayer.h"
+#include "../../headers/nn/AIPlayer.h"
 #include "../../headers/holdem/Table.h"
 
 void HoldemTest::test() {
@@ -18,7 +18,7 @@ void HoldemTest::test() {
 
 //    int scores[5][9];
 //    for (int h = 0; h < 5; h++)
-//        hands[h]->score(h, flop, scores[h]);
+//        hands[h]->recordBestHand(h, communityCards, scores[h]);
 
     Player* players[5];
     for (int p = 0; p < 5; p++)

@@ -3,7 +3,7 @@
 
 std::mt19937_64 mt_rand(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
-NeuralNetwork::NeuralNetwork(int neuronsPerLayer[], const int layers) {
+NeuralNetwork::NeuralNetwork(int neuronsPerLayer[], int layers) {
     activ = new double*[layers];
     weights = new double**[layers];
     this->layers = layers;
@@ -24,7 +24,6 @@ NeuralNetwork::NeuralNetwork(int neuronsPerLayer[], const int layers) {
     }
 }
 
-// Cleanup
 NeuralNetwork::~NeuralNetwork() {
     for (int l = 0; l < layers; l++)
         delete activ[l];
@@ -40,21 +39,14 @@ NeuralNetwork::~NeuralNetwork() {
     delete weights;
 }
 
-// Sigmoid function (standard in NN implementations)
 double NeuralNetwork::sigmoid(double d) {
     return (1.0 / (1.0 + exp(-d)));
 }
 
-// Inverse sigmoid (reverses the sigmoid operation, used for raises)
 double NeuralNetwork::invSigmoid(double d) {
     return -log((1 / d) - 1);
 }
 
-/**
- * Forward propagates through the network, using a given set of inputs.
- *
- * @param input Inputs to use for propagation
- */
 void NeuralNetwork::forward(double input[]) {
 
     // Zero all activations in preparation for data ingestion
@@ -76,12 +68,6 @@ void NeuralNetwork::forward(double input[]) {
     }
 }
 
-/**
- * Returns the neuron that activated (which is the action the network would like to be performed)
- *
- * @param input First layer inputs, should be constant in size
- * @return Index of activated neuron
- */
 int NeuralNetwork::getAction(double input[]) {
     forward(input);
 

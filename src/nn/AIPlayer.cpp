@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../../headers/AIPlayer.h"
+#include "../../headers/nn/AIPlayer.h"
 
 AIPlayer::AIPlayer() {
     nn = new NeuralNetwork(new int[3] {5, 35, 3}, 3);

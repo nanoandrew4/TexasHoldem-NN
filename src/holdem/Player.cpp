@@ -35,7 +35,7 @@ int Player::play(int tableInfo[]) {
     std::cout << std::endl;
 }
 
-void Player::anteUp(int ante) {
+void Player::anteUp(uint ante) {
     this->money -= ante;
 }
 

@@ -21,5 +21,5 @@ void Deck::shuffle() {
 }
 
 Card* Deck::deal() {
-    return deck[pos++];
+    return deck[pos--];
 }
