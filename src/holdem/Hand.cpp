@@ -7,6 +7,8 @@ Hand::Hand(Card* c1, Card* c2) {
 
 Hand::~Hand() {}
 
+// TODO: CHECK FOR BIAS TOWARDS HIGHER CARDS
+
 /**
  * Displays an array of card pointers, so the user can see what is going on.
  * Note that all values represented in code are shifted one to the left, so a value of 2 actually represents a 3. This
@@ -102,7 +104,7 @@ void Hand::recordBestHand(int playerNum, Card* communityCards[], int topHand[]) 
     } else if (straightRes[0] == 1) { // Straight
         topHand[1] = STRT;
         topHand[2] = straightRes[1]; // Highest card in the straightCheck
-        std::cout << "Straight | High in straightCheck: " << straightRes[1] << std::endl;
+        std::cout << "Straight | High in straight: " << straightRes[1] << std::endl;
     } else if (sameValRes[0] == 3) { // Three of a kind
         topHand[1] = THREE_OAK;
         for (int svr = 1; svr < 4; svr++) // Copy over what the value of the match is, along with two kickers
@@ -138,7 +140,7 @@ void Hand::sameVal(Card* cards[], int results[]) {
     // Two card values of most interest (read as 'Card Of Interest'). First element is more interesting than the second
     int coi[2] = {0};
 
-    for (int c = 1; c < 13; c++) { // Runs through all values and determines which card values will give the best hand
+    for (int c = 1; c < 15; c++) { // Runs through all values and determines which card values will give the best hand
         for (int cois = 0; cois < 2; cois++) {
             if (vals[c] >= vals[coi[cois]]) {
                 if (cois == 0) {

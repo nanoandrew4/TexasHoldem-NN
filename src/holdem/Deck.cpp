@@ -14,9 +14,10 @@ Deck::~Deck() {
 
 void Deck::shuffle() {
     for (int i = 0; i < 200; i++) {
-        Card* tmp = deck[i % 52];
+        ulong oldPos = mt_rand() % 52;
         ulong newPos = mt_rand() % 52;
-        deck[i % 52] = deck[newPos];
+        Card* tmp = deck[oldPos];
+        deck[oldPos] = deck[newPos];
         deck[newPos] = tmp;
     }
 }

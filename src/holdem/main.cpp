@@ -22,9 +22,9 @@ int main() {
     delete players[3];
     */
 
-    HoldemTest t;
-    t.test();
-
-//    NNEvolver nnEvolver;
+//    HoldemTest t;
+//    t.test();
+//
+    NNEvolver nnEvolver;
     return 0;
 }

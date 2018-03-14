@@ -42,8 +42,8 @@ NNEvolver::~NNEvolver() {
 
 void NNEvolver::train(Player*** tablePlayers, int playersPerTable, int threadNum) {
     for (int t = 0; t < population / playersPerTable; t++) {
-        std::cout << "Playing table: " << t << std::endl;
-        std::cout << tablePlayers[t][0]->playing << std::endl;
+//        std::cout << "Playing table: " << t << std::endl;
+//        std::cout << tablePlayers[t][0]->playing << std::endl;
         Table table(tablePlayers[t], playersPerTable);
         table.play();
     }

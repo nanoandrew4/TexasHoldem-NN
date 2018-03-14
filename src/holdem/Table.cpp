@@ -67,7 +67,7 @@ void Table::play() {
         for (int p = 0; p < activePlayers; p++)
             players[p]->hand = new Hand(cards[p], cards[p + activePlayers]);
 
-        std::cout << "Starting round\n\n";
+//        std::cout << "Starting round\n\n";
 
         playRound((r + (activePlayers > 2 ? 3u : 2u)) % numOfPlayers);
 
@@ -138,7 +138,7 @@ void Table::playRound(uint startPlayer) {
     lastRaise = 0;
     lastPlayerRaised = startPlayer;
 
-    std::cout << "Starting betting\n\n";
+//    std::cout << "Starting betting\n\n";
 
     do {
         if (players[p]->isPlaying()) {
@@ -160,7 +160,7 @@ void Table::playRound(uint startPlayer) {
         p = (p + 1) % numOfPlayers;
     } while (p != lastPlayerRaised && activePlayers > 1);
 
-    std::cout << "Betting finished\n\n";
+//    std::cout << "Betting finished\n\n";
 
     for (p = 0; p < numOfPlayers; p++)
         if (players[p]->isPlaying()) {

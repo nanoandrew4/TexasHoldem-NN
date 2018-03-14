@@ -26,7 +26,7 @@ void HoldemTest::test() {
 //    int scores[8][9];
 //    for (int h = 0; h < 8; h++)
 //        hands[h]->recordBestHand(h, communityCards, scores[h]);
-/*
+
     int bestType = HC;
 
     // Compare hands
@@ -61,18 +61,18 @@ void HoldemTest::test() {
     std::cout << "Winning hands are: " << std::endl;
     for (int wp = 0; wp < bestHands.size(); wp++)
         hands[bestHands.at(wp)[0]]->displayHand();
-*/
-    Player* players[5];
-    for (int p = 0; p < 5; p++)
-        players[p] = new AIPlayer();
 
-    Table t(players, 5);
-    t.play();
+//    Player* players[5];
+//    for (int p = 0; p < 5; p++)
+//        players[p] = new AIPlayer();
+//
+//    Table t(players, 5);
+//    t.play();
 
 
     for (int h = 0; h < 5; h++) {
         delete communityCards[h];
-        delete players[h];
+//        delete players[h];
     }
 
     for (int h = 0; h < handNum; h++)
