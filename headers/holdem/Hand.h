@@ -30,16 +30,17 @@ public:
      * @param numOfCards Number of cards in the 'cards' array
      */
     void displayHand(Card* cards[], int numOfCards = 2);
+    void displayHand();
 
     /**
      * Using the flop (community cards, the ones on the table) and this hand, returns the best hand that can be played,
      * along with some information that can be used to break ties in the event that two players have the same hand type.
      *
      * @param playerNum Player number at the table
-     * @param flop Array containing the cards that are face up on the table
+     * @param communityCards Array containing the cards that are face up on the table
      * @param topHand Array of size 9, where the data regarding the hand will be written to
      */
-    void recordBestHand(int playerNum, Card* flop[], int topHand[]);
+    void recordBestHand(int playerNum, Card* communityCards[], int topHand[]);
 
 private:
     /**

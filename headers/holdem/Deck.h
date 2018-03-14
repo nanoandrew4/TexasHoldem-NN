@@ -12,18 +12,17 @@ class Deck {
 private:
     Card* deck[52];
 
-    /**
-     * Position to read card value from (allows simulating that the deck size decreases when a card is drawn)
-     */
+    // Position to read card value from (allows simulating that the deck size decreases when a card is drawn)
     int pos = 51;
 
-    /**
-     * Shuffles the deck, by randomly swapping cards.
-     */
+    // Shuffles the deck, by randomly swapping cards.
     void shuffle();
 
 public:
+    // Fills deck with 52 cards, one of each suit and value
     Deck();
+
+    // Cleans up deck array
     ~Deck();
 
     /**

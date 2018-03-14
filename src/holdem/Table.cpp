@@ -10,12 +10,13 @@ Table::Table(Player** players, uint numOfPlayers) {
     this->numOfPlayers = numOfPlayers;
 }
 
-Table::~Table() = default;
+Table::~Table() {};
 
 void Table::play() {
     for (int r = 0; r < numOfPlayers; r++) {
         this->activePlayers = numOfPlayers;
 
+        // Count how many players are able to play the next round
         for (int p = 0; p < numOfPlayers; p++) {
             players[p]->newRound();
             if (!players[p]->isPlaying())
@@ -29,6 +30,7 @@ void Table::play() {
             exit(2);
         }
 
+        // Set special players
         dealer = players[r];
         bool smallBlindSet = false;
         for (int p = 0; p < numOfPlayers; p++) {
@@ -44,13 +46,13 @@ void Table::play() {
         }
 
         int initBet = SB;
-        if (smallBlind->getMoney() > SB)
+        if (smallBlind->getMoney() < SB)
             initBet = SB - smallBlind->getMoney();
         smallBlind->anteUp(initBet);
         pot += initBet;
 
         initBet = BB;
-        if (bigBlind->getMoney() > BB)
+        if (bigBlind->getMoney() < BB)
             initBet = BB - smallBlind->getMoney();
 
         bigBlind->anteUp(initBet);
@@ -58,16 +60,16 @@ void Table::play() {
 
         Deck deck;
 
-        Card* cards[numOfPlayers * 2];
-        for (int p = 0; p < numOfPlayers * 2; p++)
+        Card* cards[activePlayers * 2];
+        for (int p = 0; p < activePlayers * 2; p++)
             cards[p] = deck.deal();
 
-        for (int p = 0; p < numOfPlayers; p++)
-            players[p]->hand = new Hand(cards[p], cards[p + numOfPlayers]);
+        for (int p = 0; p < activePlayers; p++)
+            players[p]->hand = new Hand(cards[p], cards[p + activePlayers]);
 
         std::cout << "Starting round\n\n";
 
-        playRound((r + (numOfPlayers > 2 ? 3u : 2u)) % numOfPlayers);
+        playRound((r + (activePlayers > 2 ? 3u : 2u)) % numOfPlayers);
 
         for (int br = 0; br < 3 && activePlayers > 1; br++) {
             if (br == 0)
@@ -75,46 +77,55 @@ void Table::play() {
                     communityCards[f] = deck.deal();
             else
                 communityCards[br + 2] = deck.deal();
-            playRound(r + 1u);
+            playRound((r + 1u) % numOfPlayers);
         }
 
-        int bestType = HC;
+        if (activePlayers > 1) {
+            for (int i = 0; i < 5; i++)
+                communityCards[i]->getSuitSymbol();
 
-        // Compare hands
-        std::vector<int*> bestHands;
-        int activPlayer = 0;
-        for (uint p = 0; p < numOfPlayers; p++) {
-            if (players[p]->isPlaying()) {
-                bestHands.push_back(new int[9]);
-                players[p]->hand->recordBestHand(p, communityCards, bestHands.at(activPlayer++));
-                if (bestHands.back()[1] < bestType)
-                    bestType = bestHands.back()[1];
+            int bestType = HC;
+
+            // Compare hands
+            std::vector<int *> bestHands;
+            int activPlayer = 0;
+            for (uint p = 0; p < numOfPlayers; p++) {
+                if (players[p]->isPlaying()) {
+                    bestHands.push_back(new int[9]);
+                    players[p]->hand->recordBestHand(p, communityCards, bestHands.at(activPlayer++));
+                    if (bestHands.back()[1] < bestType)
+                        bestType = bestHands.back()[1];
+                }
             }
-        }
 
-        // Active players
-        for (ulong ap = 0; ap < bestHands.size();) {
-            if (bestHands.at(ap)[1] > bestType)
-                bestHands.erase(bestHands.begin() + ap);
-            else
-                ap++;
-        }
-
-        // If players have same hand type, compare values to determine winner
-        for (int hs = 2; bestHands.size() > 1 && hs < 9; hs++)
-            for (ulong h = 0; h < bestHands.size() - 1;) {
-                if (bestHands.at(h)[hs] > bestHands.at(h + 1)[hs])
-                    bestHands.erase(bestHands.begin() + h + 1);
-                else if (bestHands.at(h)[hs] < bestHands.at(h + 1)[hs])
-                    bestHands.erase(bestHands.begin() + h);
+            // Erase all players with hands worse than the best type from the pool of potential victors
+            for (ulong ap = 0; ap < bestHands.size();) {
+                if (bestHands.at(ap)[1] > bestType)
+                    bestHands.erase(bestHands.begin() + ap);
                 else
-                    h++;
+                    ap++;
             }
 
-        // Split pot
-        for (int wp = 0; wp < bestHands.size(); wp++) {
-            players[bestHands.at(wp)[0]]->collectWinnings(pot / (bestHands.size() - wp));
-            pot -= pot / (bestHands.size() - wp);
+            // If players have same hand type, compare values to determine winner
+            for (int hs = 2; bestHands.size() > 1 && hs < 9; hs++)
+                for (ulong h = 0; h < bestHands.size() - 1;) {
+                    if (bestHands.at(h)[hs] > bestHands.at(h + 1)[hs])
+                        bestHands.erase(bestHands.begin() + h + 1);
+                    else if (bestHands.at(h)[hs] < bestHands.at(h + 1)[hs])
+                        bestHands.erase(bestHands.begin() + h);
+                    else
+                        h++;
+                }
+
+            // Split pot amongst winners (if more than one player has the winning hand)
+            for (int wp = 0; wp < bestHands.size(); wp++) {
+                players[bestHands.at(wp)[0]]->collectWinnings(pot / (bestHands.size() - wp));
+                pot -= pot / (bestHands.size() - wp);
+            }
+        } else { // Last standing player takes all the cash
+            for (int p = 0; p < numOfPlayers; p++)
+                if (players[p]->isPlaying())
+                    players[p]->collectWinnings(pot);
         }
 
         for (int p = 0; p < numOfPlayers; p++)
@@ -166,5 +177,5 @@ void Table::getTableInfo(int tableInfo[], Player* currPlayer) {
     int opp = 0;
     for (int p = 0; p < numOfPlayers; p++)
         if (players[p]->isPlaying() && players[p] != currPlayer)
-            tableInfo[opp++] = players[p]->getMoney();
+            tableInfo[opp++ + 4] = players[p]->getMoney();
 }

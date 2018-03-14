@@ -5,9 +5,7 @@ Hand::Hand(Card* c1, Card* c2) {
     this->pocket[0] = c1; this->pocket[1] = c2;
 }
 
-Hand::~Hand() {
-    for (auto &card : pocket) delete card;
-}
+Hand::~Hand() {}
 
 /**
  * Displays an array of card pointers, so the user can see what is going on.
@@ -34,8 +32,12 @@ void Hand::displayHand(Card* cards[], int numOfCards) {
     }
 }
 
+void Hand::displayHand() {
+    displayHand(pocket, 2);
+}
+
 // TODO: VERIFY THAT SCORING WORKS WITH 5 AND 6 COMBINED SIZES
-void Hand::recordBestHand(int playerNum, Card* flop[], int topHand[]) {
+void Hand::recordBestHand(int playerNum, Card* communityCards[], int topHand[]) {
     // Check for flushCheck, straightCheck and # of cards. All else can be determined from this
     topHand[0] = playerNum;
 
@@ -43,11 +45,11 @@ void Hand::recordBestHand(int playerNum, Card* flop[], int topHand[]) {
     cards[0] = this->pocket[0];
     cards[1] = this->pocket[1];
     for (int f = 0; f < 5; f++)
-        cards[f + 2] = flop[f];
+        cards[f + 2] = communityCards[f];
 
     quicksortByVal(cards, 0, 6);
 
-    std::cout << "Evaluating: ";
+    std::cout << "Evaluating for player " << playerNum << ": ";
     displayHand(cards, 7);
 
     int straightRes[6] = {0};
@@ -65,7 +67,7 @@ void Hand::recordBestHand(int playerNum, Card* flop[], int topHand[]) {
     int sameValRes[5] = {0};
     sameVal(cards, sameValRes);
 
-    if (straightRes[0] == 1 && flushRes[0] == 1) { // Verify straightCheck flush (and royal flushCheck)
+    if (straightRes[0] == 1 && flushRes[0] == 1) { // Verify straight flush (and royal flush)
         for (int c = 0; c < 4; c++) {
             if (cards[c]->cardValue == straightRes[1]) {
                 int matches = 0;
@@ -75,7 +77,7 @@ void Hand::recordBestHand(int playerNum, Card* flop[], int topHand[]) {
                 if (matches >= 5) {
                     topHand[1] = STR_FLUSH;
                     topHand[2] = cards[c]->cardValue;
-                    std::cout << "Straight flushCheck | High: " << cards[c]->cardValue << std::endl;
+                    std::cout << "Straight flush | High: " << cards[c]->cardValue << std::endl << std::endl;
                     return;
                 }
             }
@@ -127,15 +129,16 @@ void Hand::recordBestHand(int playerNum, Card* flop[], int topHand[]) {
 }
 
 void Hand::sameVal(Card* cards[], int results[]) {
-    // Pairs check
-    int vals[13] = {0};
+    int vals[15] = {0}; // Holds number of appearances of each card value
 
+    // Count how many cards have any given value
     for (int c = 0; c < 7; c++)
         vals[cards[c]->cardValue]++;
 
-    int coi[2] {0};
+    // Two card values of most interest (read as 'Card Of Interest'). First element is more interesting than the second
+    int coi[2] = {0};
 
-    for (int c = 1; c < 13; c++) { // Needs revising
+    for (int c = 1; c < 13; c++) { // Runs through all values and determines which card values will give the best hand
         for (int cois = 0; cois < 2; cois++) {
             if (vals[c] >= vals[coi[cois]]) {
                 if (cois == 0) {
@@ -149,10 +152,7 @@ void Hand::sameVal(Card* cards[], int results[]) {
 
     int kickers[3] = {0};
 
-    if (coi[0] == 4)
-        coi[1] = coi[0];
-
-    if (coi[0] != 3 || coi[1] != 2) {
+    if (coi[0] != 3 || coi[1] != 2) { // Gets kickers unless Full House, which does not have any
         int k = 0;
         for (int c = 0; c < 7; c++)
             if (cards[c]->cardValue != coi[0] && cards[c]->cardValue != coi[1])
@@ -187,25 +187,25 @@ void Hand::sameVal(Card* cards[], int results[]) {
 }
 
 void Hand::straightCheck(Card* cards[], int results[]) {
-    // Straight check
-
-    int seq = 0;
+    int seq = 0; // Length of potential sequence
     for (int v = 1; v < 7; v++) {
         if (cards[v - 1]->cardValue - cards[v]->cardValue == 1)
             seq++;
         else if (cards[v - 1]->cardValue - cards[v]->cardValue != 0)
             seq = 0;
-        if (v == 6 && cards[0]->cardValue == 14 && cards[6]->cardValue - 1 == 1) {
+        if (v == 6 && cards[0]->cardValue == 14 && cards[6]->cardValue - 1 == 1) { // Special ace check as 1
             seq++;
             v++;
         }
-        if (seq > 3) {
-            results[0] = 1;
+        if (seq > 3) { // 1-2-3-4-5 (only 4 '-', so if 4 exist then a sequence must exist)
+            results[0] = 1; // Set straight found to true
             int pos = 1;
-            for (int c = v - 5; c <= v; c++)
+            // Record straight (and wrap around in case ace exists, which has val of 14)
+            for (int c = (v + 2) % 7; c <= v; c++)
                 if (results[pos - 1] != cards[c % 7]->cardValue)
                     results[pos++] = cards[c % 7]->cardValue;
 
+            // If last card in sequence is ace, change calue from 14 to 1
             if (results[5] == 14)
                 results[5] = 1;
             break;
@@ -214,15 +214,15 @@ void Hand::straightCheck(Card* cards[], int results[]) {
 }
 
 void Hand::flushCheck(Card* cards[], int results[]) {
-    // Flush check
+    int suits[4] = {0}; // Holds number of appearances of each suit
 
-    int suits[4] = {0};
-
+    // Count each suit and add it to the results array
     for (int c = 0; c < 7; c++) {
         suits[cards[c]->suit]++;
         results[c + 1] = cards[c]->suit;
     }
 
+    // Any suit not belonging to the flush has its index in results set to 0, otherwise 1
     for (int s = 0; s < 4; s++) {
         if (suits[s] > 4) {
             results[0] = 1;
