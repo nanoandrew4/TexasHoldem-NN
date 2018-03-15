@@ -12,7 +12,8 @@ private:
     int gensToEvolve = 1000;
     int threads = 4;
 
-    void train(Player***, int, int);
+    void train(Player*[], int, int);
+    void quicksort(Player*[], int, int);
 };
 
 

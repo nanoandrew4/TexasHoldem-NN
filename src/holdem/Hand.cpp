@@ -38,7 +38,6 @@ void Hand::displayHand() {
     displayHand(pocket, 2);
 }
 
-// TODO: VERIFY THAT SCORING WORKS WITH 5 AND 6 COMBINED SIZES
 void Hand::recordBestHand(int playerNum, Card* communityCards[], int topHand[]) {
     // Check for flushCheck, straightCheck and # of cards. All else can be determined from this
     topHand[0] = playerNum;
