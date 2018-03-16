@@ -50,8 +50,8 @@ void Hand::recordBestHand(int playerNum, Card* communityCards[], int topHand[]) 
 
     quicksortByVal(cards, 0, 6);
 
-    std::cout << "Evaluating for player " << playerNum << ": ";
-    displayHand(cards, 7);
+//    std::cout << "Evaluating for player " << playerNum << ": ";
+//    displayHand(cards, 7);
 
     int straightRes[6] = {0};
     straightCheck(cards, straightRes);
@@ -78,7 +78,7 @@ void Hand::recordBestHand(int playerNum, Card* communityCards[], int topHand[]) 
                 if (matches >= 5) {
                     topHand[1] = STR_FLUSH;
                     topHand[2] = cards[c]->cardValue;
-                    std::cout << "Straight flush | High: " << cards[c]->cardValue << std::endl << std::endl;
+//                    std::cout << "Straight flush | High: " << cards[c]->cardValue << std::endl << std::endl;
                     return;
                 }
             }
@@ -89,44 +89,44 @@ void Hand::recordBestHand(int playerNum, Card* communityCards[], int topHand[]) 
         topHand[1] = FOUR_OAK;
         topHand[2] = sameValRes[1]; // Value of four of a kind
         topHand[3] = sameValRes[2]; // Kicker
-        std::cout << "Four of a kind | High " << sameValRes[1] << " | Kicker: " << sameValRes[2] << std::endl;
+//        std::cout << "Four of a kind | High " << sameValRes[1] << " | Kicker: " << sameValRes[2] << std::endl;
     } else if (sameValRes[0] == 32) { // Full house
         topHand[1] = FH;
         topHand[2] = sameValRes[1]; // Value of three of a kind
         topHand[3] = sameValRes[2]; // Value of pair
-        std::cout << "Full house | High TOAK " << sameValRes[1] << " | High pair: " << sameValRes[2] << std::endl;
+//        std::cout << "Full house | High TOAK " << sameValRes[1] << " | High pair: " << sameValRes[2] << std::endl;
     } else if (flushRes[0] == 1) { // Flush
         topHand[1] = FLUSH;
         for (int c = 0; c < 7; c++)
             topHand[c + 2] = cards[c]->cardValue; // Copy all card values in case multiple players have a flushCheck
-        std::cout << "Flush" << std::endl;
+//        std::cout << "Flush" << std::endl;
     } else if (straightRes[0] == 1) { // Straight
         topHand[1] = STRT;
         topHand[2] = straightRes[1]; // Highest card in the straightCheck
-        std::cout << "Straight | High in straight: " << straightRes[1] << std::endl;
+//        std::cout << "Straight | High in straight: " << straightRes[1] << std::endl;
     } else if (sameValRes[0] == 3) { // Three of a kind
         topHand[1] = THREE_OAK;
         for (int svr = 1; svr < 4; svr++) // Copy over what the value of the match is, along with two kickers
             topHand[svr + 1] = sameValRes[svr];
-        std::cout << "Three of a kind | High: " << sameValRes[1] << " | Kicker: " << sameValRes[2] << " | Second kicker: " << sameValRes[3] << std::endl;
+//        std::cout << "Three of a kind | High: " << sameValRes[1] << " | Kicker: " << sameValRes[2] << " | Second kicker: " << sameValRes[3] << std::endl;
     } else if (sameValRes[0] == 22) { // Two pairs
         topHand[1] = TWO_PAIR;
         for (int svr = 1; svr < 5; svr++) // Copy over values of two pairs, and two kickers
             topHand[svr + 1] = sameValRes[svr];
-        std::cout << "Two pairs | High pair: " << sameValRes[1] << " | Low pair: " << sameValRes[2] << " | Kicker: " << sameValRes[3] << " | Second kicker: " << sameValRes[4] << std::endl;
+//        std::cout << "Two pairs | High pair: " << sameValRes[1] << " | Low pair: " << sameValRes[2] << " | Kicker: " << sameValRes[3] << " | Second kicker: " << sameValRes[4] << std::endl;
     } else if (sameValRes[0] == 2) { // Pair
         topHand[1] = PAIR;
         for (int svr = 1; svr < 5; svr++) // Copy over value of pair and three kickers
             topHand[svr + 1] = sameValRes[svr];
-        std::cout << "Pair | High: " << sameValRes[1] << " | Kicker: " << sameValRes[2] << " | Second kicker: " << sameValRes[3] << " | Third kicker: " << sameValRes[4] << std::endl;
+//        std::cout << "Pair | High: " << sameValRes[1] << " | Kicker: " << sameValRes[2] << " | Second kicker: " << sameValRes[3] << " | Third kicker: " << sameValRes[4] << std::endl;
     } else { // High card
         topHand[1] = HC;
         for (int c = 0; c < 7; c++) // Copy over all cards, for comparison
             topHand[c + 2] = cards[c]->cardValue;
-        std::cout << "High card" << std::endl;
+//        std::cout << "High card" << std::endl;
     }
 
-    std::cout << std::endl;
+//    std::cout << std::endl;
 }
 
 void Hand::sameVal(Card* cards[], int results[]) {

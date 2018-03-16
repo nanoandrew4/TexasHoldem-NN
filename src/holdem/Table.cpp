@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../../headers/holdem/Table.h"
 
-Table::Table(Player** players, uint numOfPlayers) {
+Table::Table(Player** players, int numOfPlayers) {
     if (numOfPlayers < 2) {
         std::cout << "Table must have at least 2 players" << std::endl;
         return;
@@ -23,12 +23,8 @@ void Table::play() {
                 activePlayers--;
         }
 
-        if (activePlayers == 1)
+        if (activePlayers <= 1)
             break;
-        else if (activePlayers < 1) {
-            std::cout << "Table::play gotcha!" << std::endl;
-            exit(2);
-        }
 
         // Set special players
         dealer = players[r];
@@ -69,7 +65,7 @@ void Table::play() {
 
 //        std::cout << "Starting round\n\n";
 
-        playRound((r + (activePlayers > 2 ? 3u : 2u)) % numOfPlayers);
+        playRound((r + (activePlayers > 2 ? 3 : 2)) % numOfPlayers);
 
         for (int br = 0; br < 3 && activePlayers > 1; br++) {
             if (br == 0)
@@ -77,7 +73,7 @@ void Table::play() {
                     communityCards[f] = deck.deal();
             else
                 communityCards[br + 2] = deck.deal();
-            playRound((r + 1u) % numOfPlayers);
+            playRound((r + 1) % numOfPlayers);
         }
 
         if (activePlayers > 1) {
@@ -87,9 +83,9 @@ void Table::play() {
             int bestType = HC;
 
             // Compare hands
-            std::vector<int *> bestHands;
+            std::vector<int*> bestHands;
             int activPlayer = 0;
-            for (uint p = 0; p < numOfPlayers; p++) {
+            for (int p = 0; p < numOfPlayers; p++) {
                 if (players[p]->isPlaying()) {
                     bestHands.push_back(new int[9]);
                     players[p]->hand->recordBestHand(p, communityCards, bestHands.at(activPlayer++));
@@ -100,20 +96,23 @@ void Table::play() {
 
             // Erase all players with hands worse than the best type from the pool of potential victors
             for (ulong ap = 0; ap < bestHands.size();) {
-                if (bestHands.at(ap)[1] > bestType)
+                if (bestHands.at(ap)[1] > bestType) {
+                    delete [] bestHands.at(ap);
                     bestHands.erase(bestHands.begin() + ap);
-                else
+                } else
                     ap++;
             }
 
             // If players have same hand type, compare values to determine winner
             for (int hs = 2; bestHands.size() > 1 && hs < 9; hs++)
                 for (ulong h = 0; h < bestHands.size() - 1;) {
-                    if (bestHands.at(h)[hs] > bestHands.at(h + 1)[hs])
+                    if (bestHands.at(h)[hs] > bestHands.at(h + 1)[hs]) {
+                        delete [] bestHands.at(h + 1);
                         bestHands.erase(bestHands.begin() + h + 1);
-                    else if (bestHands.at(h)[hs] < bestHands.at(h + 1)[hs])
+                    } else if (bestHands.at(h)[hs] < bestHands.at(h + 1)[hs]) {
+                        delete [] bestHands.at(h);
                         bestHands.erase(bestHands.begin() + h);
-                    else
+                    } else
                         h++;
                 }
 
@@ -122,6 +121,9 @@ void Table::play() {
                 players[bestHands.at(wp)[0]]->collectWinnings(pot / (bestHands.size() - wp));
                 pot -= pot / (bestHands.size() - wp);
             }
+
+            for (int i = 0; i < bestHands.size(); i++)
+                delete [] bestHands.at(i);
         } else { // Last standing player takes all the cash
             for (int p = 0; p < numOfPlayers; p++)
                 if (players[p]->isPlaying())
@@ -133,7 +135,7 @@ void Table::play() {
     }
 }
 
-void Table::playRound(uint startPlayer) {
+void Table::playRound(int startPlayer) {
     int p = startPlayer;
     lastRaise = 0;
     lastPlayerRaised = startPlayer;
@@ -147,13 +149,15 @@ void Table::playRound(uint startPlayer) {
             int opt = players[p]->play(tableInfo);
             if (opt == -1) {
                 activePlayers--;
+                if (activePlayers == 1)
+                    return;
                 for (int np = 0; np < numOfPlayers; np++)
                     if (players[(p + numOfPlayers - np) % numOfPlayers]->isPlaying())
                         lastPlayerRaised = (p + np) % numOfPlayers;
             }
             else if (opt > lastRaise) { // TODO: NEEDS REVIEWING
-                lastRaise = (uint) opt;
-                lastPlayerRaised = (uint) (p);
+                lastRaise = opt;
+                lastPlayerRaised = p;
             }
         }
 
@@ -175,7 +179,7 @@ void Table::getTableInfo(int tableInfo[], Player* currPlayer) {
     tableInfo[2] = activePlayers - 1; // Alternatively use numOfPlayers
     tableInfo[3] = 0; // To be filled in by AIPlayer
     int opp = 0;
-    for (int p = 0; p < numOfPlayers; p++)
+    for (int p = 0; opp != activePlayers - 1; p++)
         if (players[p]->isPlaying() && players[p] != currPlayer)
             tableInfo[opp++ + 4] = players[p]->getMoney();
 }

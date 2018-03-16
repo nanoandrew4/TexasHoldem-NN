@@ -9,7 +9,8 @@ Deck::Deck() {
 }
 
 Deck::~Deck() {
-    for (auto &c : deck) delete c;
+    for (auto &c : deck)
+        delete c;
 }
 
 void Deck::shuffle() {

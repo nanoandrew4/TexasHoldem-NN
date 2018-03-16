@@ -43,7 +43,7 @@ void Player::collectWinnings(uint winnings) {
     money += winnings;
 }
 
-uint Player::getMoney() {
+int Player::getMoney() {
     return money;
 }
 

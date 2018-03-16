@@ -3,7 +3,7 @@
 
 std::mt19937_64 mt_rand(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
-NeuralNetwork::NeuralNetwork(int neuronsPerLayer[], int layers) {
+NeuralNetwork::NeuralNetwork(int layers, int neuronsPerLayer[], bool randomize) {
     activ = new double*[layers];
     weights = new double**[layers];
     this->layers = layers;
@@ -18,25 +18,36 @@ NeuralNetwork::NeuralNetwork(int neuronsPerLayer[], int layers) {
         weights[l] = new double *[neuronsPerLayer[l]];
         for (int n = 0; n < neuronsPerLayer[l]; n++) {
             weights[l][n] = new double[neuronsPerLayer[l + 1]];
-            for (int nn = 0; nn < neuronsPerLayer[l + 1]; nn++)
-                weights[l][n][nn] = 1.0 / (double)(mt_rand() % 100000 + 1);
+            if (randomize) {
+                for (int nn = 0; nn < neuronsPerLayer[l + 1]; nn++)
+                    weights[l][n][nn] = (mt_rand() % 100) / (double) (mt_rand() % 999 + 1);
+            }
         }
     }
 }
 
 NeuralNetwork::~NeuralNetwork() {
     for (int l = 0; l < layers; l++)
-        delete activ[l];
-    delete activ;
-
-    delete neuronsPerLayer;
+        delete [] activ[l];
+    delete [] activ;
 
     for (int l = 0; l < layers - 1; l++) {
         for (int n = 0; n < neuronsPerLayer[l]; n++)
-            delete weights[l][n];
-        delete weights[l];
+            delete [] weights[l][n];
+        delete [] weights[l];
     }
-    delete weights;
+    delete [] weights;
+}
+
+NeuralNetwork* NeuralNetwork::cloneNetworkInto(NeuralNetwork* nNet) {
+    for (int l = 0; l < layers - 1; l++)
+        for (int n = 0; n < neuronsPerLayer[l]; n++)
+            for (int nn = 0; nn < neuronsPerLayer[l + 1]; nn++)
+                nNet->setWeightAt(l, n, nn, weights[l][n][nn]);
+}
+
+NeuralNetwork* NeuralNetwork::cloneNetworkStructure(bool randomize) {
+    return new NeuralNetwork(layers, neuronsPerLayer, randomize);
 }
 
 double NeuralNetwork::sigmoid(double d) {

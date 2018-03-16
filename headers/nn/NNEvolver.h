@@ -2,6 +2,7 @@
 #define TEXAS_HOLDEM_NN_NNEVOLVER_H
 
 #include "../holdem/Player.h"
+#include "AIPlayer.h"
 
 class NNEvolver {
 public:
@@ -9,11 +10,13 @@ public:
     ~NNEvolver();
 private:
     int population = 1000;
-    int gensToEvolve = 1000;
+    int gensToEvolve = 5;
+    int numOfParents = 10;
     int threads = 4;
 
-    void train(Player*[], int, int);
-    void quicksort(Player*[], int, int);
+    void train(AIPlayer*[], int, int);
+    void quicksort(AIPlayer*[], int, int);
+    void generateNextGen(AIPlayer* players[], AIPlayer* parents[]);
 };
 
 

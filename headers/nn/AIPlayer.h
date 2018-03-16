@@ -18,10 +18,14 @@ public:
      */
     int play(int tableInfo[]);
 
+    void setNN(NeuralNetwork* nn) {delete this->nn; this->nn = nn;}
+    NeuralNetwork* getNN() { return nn;}
 private:
+    int handPotential();
     NeuralNetwork* nn;
 
-    int handPotential();
+    static const int layers = 3;
+    static int neuronsPerLayer[10]; // Defined in src (5-25-3)
 };
 
 

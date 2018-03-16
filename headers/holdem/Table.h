@@ -7,7 +7,7 @@
 
 class Table {
 public:
-    Table(Player* players[], uint numOfPlayers);
+    Table(Player* players[], int numOfPlayers);
     ~Table();
 
     /**
@@ -23,7 +23,7 @@ private:
      *
      * @param startPlayer Player that makes the first betting decision
      */
-    void playRound(uint startPlayer);
+    void playRound(int startPlayer);
 
     /**
      * Writes information about the table the players are seated at to the array passed. This information is used
@@ -44,18 +44,18 @@ private:
     Player* smallBlind;
     Player* bigBlind;
 
-    uint numOfPlayers;
-    uint activePlayers;
+    int numOfPlayers;
+    int activePlayers;
 
     // Big blind, value that all players must ante up in order to play their hands
-    static const uint BB = 2;
+    static const int BB = 2;
 
     // Small blind, value the player assigned this role must ante up in order to play his hand (1/2 BB)
-    static const uint SB = 1;
+    static const int SB = 1;
 
-    uint pot = 0; // Money on the table
-    uint lastRaise = 0; // Last amount raised
-    uint lastPlayerRaised = 0; // Last player who raised
+    int pot = 0; // Money on the table
+    int lastRaise = 0; // Last amount raised
+    int lastPlayerRaised = 0; // Last player who raised
 };
 
 

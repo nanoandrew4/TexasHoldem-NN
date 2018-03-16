@@ -1,8 +1,10 @@
 #include <iostream>
 #include "../../headers/nn/AIPlayer.h"
 
+int AIPlayer::neuronsPerLayer[] = {5, 25, 3};
+
 AIPlayer::AIPlayer() {
-    nn = new NeuralNetwork(new int[3] {5, 35, 3}, 3);
+    nn = new NeuralNetwork(layers, neuronsPerLayer, true);
 }
 
 AIPlayer::~AIPlayer() {

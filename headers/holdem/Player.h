@@ -35,12 +35,14 @@ public:
      * Returns amount of money the player disposes of
      * @return Amount of money the player disposes of
      */
-    uint getMoney();
+    int getMoney();
 
     /**
      * Prepares player for a new round, by setting the 'playing' boolean to true.
      */
     void newRound();
+
+    void resetMoney() {money = initMoney;}
 
     /**
      * Code to run when a players turn comes around. Virtual allows overwriting by inheriting classes.
@@ -50,7 +52,9 @@ public:
      */
     virtual int play(int tableInfo[]);
 
-    uint money = 1000;
+private:
+    static const int initMoney = 10000;
+    int money = 10000;
     bool playing = true;
 };
 
