@@ -72,10 +72,10 @@ void Hand::recordBestHand(int playerNum, Card* communityCards[], int topHand[]) 
         for (int c = 0; c < 4; c++) {
             if (cards[c]->cardValue == straightRes[1]) {
                 int matches = 0;
-                for (int cc = 0; cc < 7; cc++)
-                    if (cards[cc]->cardValue == straightRes[matches++ + 1] && cards[cc]->suit == flushRes[cc + 1])
+                for (int cc = 0; cc < 9 && matches < 5; cc++)
+                    if (cards[cc % 7]->cardValue == straightRes[matches + 1] && flushRes[(cc % 7) + 1] == 1)
                         matches++;
-                if (matches >= 5) {
+                if (matches == 5) {
                     topHand[1] = STR_FLUSH;
                     topHand[2] = cards[c]->cardValue;
 //                    std::cout << "Straight flush | High: " << cards[c]->cardValue << std::endl << std::endl;
@@ -206,9 +206,9 @@ void Hand::straightCheck(Card* cards[], int results[]) {
                 if (results[pos - 1] != cards[c % 7]->cardValue)
                     results[pos++] = cards[c % 7]->cardValue;
 
-            // If last card in sequence is ace, change calue from 14 to 1
-            if (results[5] == 14)
-                results[5] = 1;
+//             If last card in sequence is ace, change calue from 14 to 1
+//            if (results[5] == 14)
+//                results[5] = 1;
             break;
         }
     }

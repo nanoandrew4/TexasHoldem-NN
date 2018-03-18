@@ -10,7 +10,7 @@ public:
     ~NNEvolver();
 private:
     int population = 1000;
-    int gensToEvolve = 5;
+    int gensToEvolve = 50;
     int numOfParents = 10;
     int threads = 4;
 

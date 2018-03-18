@@ -30,18 +30,20 @@ NNEvolver::NNEvolver() {
 NNEvolver::~NNEvolver() {}
 
 void NNEvolver::train(AIPlayer* players[], int playersPerTable, int threadNum) {
-    for (int t = 0; t < population / playersPerTable; t++) {
-        Player* tablePlayers[playersPerTable];
-        for (int p = 0; p < playersPerTable; p++)
-            tablePlayers[p] = players[t * playersPerTable + p];
+    for (int r = 0; r < 10; r++) {
+        for (int t = 0; t < population / playersPerTable; t++) {
+            Player *tablePlayers[playersPerTable];
+            for (int p = 0; p < playersPerTable; p++)
+                tablePlayers[p] = players[t * playersPerTable + p];
 //        std::cout << "Playing table: " << t << std::endl;
 //        std::cout << tablePlayers[t][0]->playing << std::endl;
-        Table table(tablePlayers, playersPerTable);
-        table.play();
-    }
+            Table table(tablePlayers, playersPerTable);
+            table.play();
+        }
 
-    // Sort by money (TODO: CHANGE METRIC)
-    quicksort(players, 0, population - 1);
+        // Sort by money (TODO: CHANGE METRIC)
+        quicksort(players, 0, population - 1);
+    }
 
     AIPlayer* parents[numOfParents];
     for (int p = 0; p < numOfParents; p++) {

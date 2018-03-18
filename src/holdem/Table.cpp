@@ -56,12 +56,12 @@ void Table::play() {
 
         Deck deck;
 
-        Card* cards[activePlayers * 2];
-        for (int p = 0; p < activePlayers * 2; p++)
+        Card* cards[numOfPlayers * 2];
+        for (int p = 0; p < numOfPlayers * 2; p++)
             cards[p] = deck.deal();
 
-        for (int p = 0; p < activePlayers; p++)
-            players[p]->hand = new Hand(cards[p], cards[p + activePlayers]);
+        for (int p = 0; p < numOfPlayers; p++)
+            players[p]->hand = new Hand(cards[p], cards[p + numOfPlayers]);
 
 //        std::cout << "Starting round\n\n";
 
@@ -87,7 +87,7 @@ void Table::play() {
             int activPlayer = 0;
             for (int p = 0; p < numOfPlayers; p++) {
                 if (players[p]->isPlaying()) {
-                    bestHands.push_back(new int[9]);
+                    bestHands.push_back(new int[9] {0});
                     players[p]->hand->recordBestHand(p, communityCards, bestHands.at(activPlayer++));
                     if (bestHands.back()[1] < bestType)
                         bestType = bestHands.back()[1];
