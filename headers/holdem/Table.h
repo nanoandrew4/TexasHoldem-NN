@@ -22,8 +22,9 @@ private:
      * player shows his cards at the end of the game.
      *
      * @param startPlayer Player that makes the first betting decision
+     * @param lastRaise Optional initial raise, used for setting the pre-flop call price
      */
-    void playRound(int startPlayer);
+    void playRound(int startPlayer, int lastRaise = 0);
 
     /**
      * Writes information about the table the players are seated at to the array passed. This information is used

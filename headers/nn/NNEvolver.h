@@ -19,5 +19,4 @@ private:
     void generateNextGen(AIPlayer* players[], AIPlayer* parents[]);
 };
 
-
 #endif //TEXAS_HOLDEM_NN_NNEVOLVER_H

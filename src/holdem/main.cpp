@@ -7,12 +7,8 @@
 
 
 int main() {
-    /*
-    Player* players[4] = {new Player(), new Player(), new Player(), new Player()};
-    players[0]->humanPlayer();
-    players[1]->humanPlayer();
-    players[2]->humanPlayer();
-    players[3]->humanPlayer();
+/*
+    Player* players[4] = {new Player("Steve"), new Player("Andy"), new Player("Stu"), new Player("Jack")};
     Table t(players, 4);
     t.play();
 
@@ -20,7 +16,7 @@ int main() {
     delete players[1];
     delete players[2];
     delete players[3];
-    */
+*/
 
 //    HoldemTest t;
 //    t.test();

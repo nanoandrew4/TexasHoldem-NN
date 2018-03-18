@@ -22,7 +22,8 @@ int AIPlayer::play(int tableInfo[]) {
     for (int i = 0; i < tableInfo[2]; i++)
         input[i + 4] = tableInfo[i + 4];
 
-    return nn->getAction(input);
+    int ans = nn->getAction(input);
+    return (ans > 1 && ans < tableInfo[0]) ? 1 : ans; // Deals with all in and improper raise
 }
 
 int AIPlayer::handPotential() {

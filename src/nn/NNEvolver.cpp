@@ -41,7 +41,7 @@ void NNEvolver::train(AIPlayer* players[], int playersPerTable, int threadNum) {
             table.play();
         }
 
-        // Sort by money (TODO: CHANGE METRIC)
+        // Sort by money
         quicksort(players, 0, population - 1);
     }
 

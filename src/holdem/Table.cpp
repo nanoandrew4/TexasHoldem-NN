@@ -28,31 +28,42 @@ void Table::play() {
 
         // Set special players
         dealer = players[r];
-        bool smallBlindSet = false;
-        for (int p = 0; p < numOfPlayers; p++) {
+//        std::cout << "Dealer: " << dealer->getName() << std::endl;
+        bool smallBlindSet = false, bigBlindSet = false;
+        for (int p = 1; p < numOfPlayers; p++) {
             if (players[(r + p) % numOfPlayers]->isPlaying()) {
                 if (!smallBlindSet) {
-                    smallBlind = players[(r + p) % numOfPlayers];
+                    lastPlayerRaised = (r + p) % numOfPlayers;
+                    smallBlind = players[lastPlayerRaised];
                     smallBlindSet = true;
+
+                    if (activePlayers == 2)
+                        break;
+//                    std::cout << "Small Blind: " << smallBlind->getName() << std::endl;
                 } else {
-                    bigBlind = players[(r + p) % numOfPlayers];
+                    lastPlayerRaised = (r + p) % numOfPlayers;
+                    bigBlind = players[lastPlayerRaised];
+                    bigBlindSet = true;
+//                    std::cout << "Big Blind: " << bigBlind->getName() << std::endl;
                     break;
                 }
             }
         }
 
+        // Small blind ante before round starts (lost to time... Might need fixing)
         int initBet = SB;
         if (smallBlind->getMoney() < SB)
             initBet = SB - smallBlind->getMoney();
         smallBlind->anteUp(initBet);
         pot += initBet;
 
-        initBet = BB;
-        if (bigBlind->getMoney() < BB)
-            initBet = BB - smallBlind->getMoney();
-
-        bigBlind->anteUp(initBet);
-        pot += initBet;
+        if (bigBlindSet) { // Big blind ante before round starts, if enough players to set big blind
+            initBet = BB;
+            if (bigBlind->getMoney() < BB)
+                initBet = BB - smallBlind->getMoney();
+            bigBlind->anteUp(initBet);
+            pot += initBet;
+        }
 
         Deck deck;
 
@@ -65,21 +76,30 @@ void Table::play() {
 
 //        std::cout << "Starting round\n\n";
 
-        playRound((r + (activePlayers > 2 ? 3 : 2)) % numOfPlayers);
+        // Pre-flop
+        playRound((lastPlayerRaised + 1) % numOfPlayers, initBet);
 
+        // Return initial ante to small blind if still playing, since they will have committed an excess to the pot
+        if (smallBlind->isPlaying() && bigBlindSet) {
+            smallBlind->collectWinnings(SB);
+            pot -= SB;
+        }
+
+//        std::cout << "Pot: " << pot << std::endl << std::endl;
         for (int br = 0; br < 3 && activePlayers > 1; br++) {
             if (br == 0)
                 for (int f = 0; f < 3; f++)
                     communityCards[f] = deck.deal();
             else
                 communityCards[br + 2] = deck.deal();
+//            std::cout << "Community cards: ";
+//            players[0]->hand->displayHand(communityCards, 3+ br);
+//            std::cout << std::endl;
             playRound((r + 1) % numOfPlayers);
+//            std::cout << "Pot: " << pot << std::endl << std::endl;
         }
 
-        if (activePlayers > 1) {
-            for (int i = 0; i < 5; i++)
-                communityCards[i]->getSuitSymbol();
-
+        if (activePlayers > 1) { // Determine winner(s) and split pot if necessary
             int bestType = HC;
 
             // Compare hands
@@ -118,6 +138,7 @@ void Table::play() {
 
             // Split pot amongst winners (if more than one player has the winning hand)
             for (int wp = 0; wp < bestHands.size(); wp++) {
+//                std::cout << players[bestHands.at(wp)[0]]->getName() << " won" << std::endl << std::endl;
                 players[bestHands.at(wp)[0]]->collectWinnings(pot / (bestHands.size() - wp));
                 pot -= pot / (bestHands.size() - wp);
             }
@@ -135,41 +156,36 @@ void Table::play() {
     }
 }
 
-void Table::playRound(int startPlayer) {
-    int p = startPlayer;
-    lastRaise = 0;
-    lastPlayerRaised = startPlayer;
+void Table::playRound(int startPlayer, int initRaise) {
+    lastRaise = initRaise;
+
+    // If pre-flop, big blind has already payed in, so do not go to him (essentially go to startPlayer - 1)
+    lastPlayerRaised = initRaise == 0 ? startPlayer : lastPlayerRaised;
 
 //    std::cout << "Starting betting\n\n";
 
-    do {
+    int p, opt = -2;
+    for (p = startPlayer; p != lastPlayerRaised || opt == -2; p = (p + 1) % numOfPlayers) {
         if (players[p]->isPlaying()) {
             int tableInfo[activePlayers - 1 + 4];
-            getTableInfo(tableInfo, players[p]);
-            int opt = players[p]->play(tableInfo);
-            if (opt == -1) {
+            getTableInfo(tableInfo, players[p]); // Table info to pass to player
+            opt = players[p]->play(tableInfo);
+            if (opt == -1) { // Fold
                 activePlayers--;
                 if (activePlayers == 1)
                     return;
-                for (int np = 0; np < numOfPlayers; np++)
-                    if (players[(p + numOfPlayers - np) % numOfPlayers]->isPlaying())
-                        lastPlayerRaised = (p + np) % numOfPlayers;
-            }
-            else if (opt > lastRaise) { // TODO: NEEDS REVIEWING
+            } else if (opt > lastRaise) { // Raise
                 lastRaise = opt;
                 lastPlayerRaised = p;
             }
         }
-
-        p = (p + 1) % numOfPlayers;
-    } while (p != lastPlayerRaised && activePlayers > 1);
-
-//    std::cout << "Betting finished\n\n";
+    }
 
     for (p = 0; p < numOfPlayers; p++)
-        if (players[p]->isPlaying()) {
-            players[p]->anteUp(lastRaise);
-            pot += lastRaise;
+        if (players[p]->isPlaying() && (initRaise != 0 ? players[p] != bigBlind : true)) {
+            int ante = (players[p]->getMoney() > lastRaise ? lastRaise : players[p]->getMoney()); // Allows for all-in
+            players[p]->anteUp(ante);
+            pot += ante;
         }
 }
 
