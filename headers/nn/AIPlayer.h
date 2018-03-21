@@ -25,7 +25,7 @@ private:
     NeuralNetwork* nn;
 
     static const int layers = 3;
-    static int neuronsPerLayer[10]; // Defined in src (5-25-3)
+    static int neuronsPerLayer[layers]; // Defined in src (5-25-3)
 };
 
 
