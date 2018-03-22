@@ -11,8 +11,9 @@ public:
 private:
     int population = 1000;
     int gensToEvolve = 50;
+    int currGen = 0;
     int numOfParents = 10;
-    static const int itersPerGen = 100;
+    static const int itersPerGen = 10;
     static const int threads = 4;
 
     static bool threadReady[threads];

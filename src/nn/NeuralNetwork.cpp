@@ -1,4 +1,5 @@
 #include <chrono>
+#include <fstream>
 #include "../../headers/nn/NeuralNetwork.h"
 
 std::mt19937_64 mt_rand(std::chrono::high_resolution_clock::now().time_since_epoch().count());
@@ -39,7 +40,7 @@ NeuralNetwork::~NeuralNetwork() {
     delete [] weights;
 }
 
-NeuralNetwork* NeuralNetwork::cloneNetworkInto(NeuralNetwork* nNet) {
+void NeuralNetwork::cloneNetworkInto(NeuralNetwork* nNet) {
     for (int l = 0; l < layers - 1; l++)
         for (int n = 0; n < neuronsPerLayer[l]; n++)
             for (int nn = 0; nn < neuronsPerLayer[l + 1]; nn++)
@@ -48,6 +49,38 @@ NeuralNetwork* NeuralNetwork::cloneNetworkInto(NeuralNetwork* nNet) {
 
 NeuralNetwork* NeuralNetwork::cloneNetworkStructure(bool randomize) {
     return new NeuralNetwork(layers, neuronsPerLayer, randomize);
+}
+
+void NeuralNetwork::serialize(std::string fileName) {
+    std::ofstream out(fileName);
+
+    out << layers << " ";
+    for (int l = 0; l < layers; l++)
+        out << neuronsPerLayer[l] << " ";
+
+    for (int l = 0; l < layers - 1; l++)
+        for (int n = 0; n < neuronsPerLayer[l]; n++)
+            for (int nn = 0; nn < neuronsPerLayer[l + 1]; nn++)
+                out << weights[l][n][nn] << " ";
+    out.close();
+}
+
+NeuralNetwork* NeuralNetwork::deserialize(std::string fileName) {
+    std::ifstream in(fileName);
+    int layers;
+    in >> layers;
+
+    int neuronsPerLayer[layers];
+    for (int l = 0; l < layers; l++)
+        in >> neuronsPerLayer[l];
+
+    NeuralNetwork* nNet = new NeuralNetwork(layers, neuronsPerLayer, false);
+
+    for (int l = 0; l < layers - 1; l++)
+        for (int n = 0; n < neuronsPerLayer[l]; n++)
+            for (int nn = 0; nn < neuronsPerLayer[l + 1]; nn++)
+                in >> nNet->weights[l][n][nn];
+    in.close();
 }
 
 double NeuralNetwork::sigmoid(double d) {

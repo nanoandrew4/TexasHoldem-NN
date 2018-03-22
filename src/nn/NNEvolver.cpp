@@ -14,9 +14,9 @@ NNEvolver::NNEvolver() {
         players[p] = new AIPlayer();
 
     std::cout << "Training" << std::endl;
-    for (int g = 0; g < gensToEvolve; g++) {
+    for (; currGen < gensToEvolve; currGen++) {
         train(players);
-        std::cout << "Finished training gen: " << g << std::endl;
+        std::cout << "Finished training gen: " << currGen << std::endl;
     }
 
     for (int t = 0; t < population; t++)
@@ -95,7 +95,6 @@ void NNEvolver::generateNextGen(AIPlayer* players[], AIPlayer* parents[]) {
 
     int layers = parents[0]->getNN()->layers;
     const int* neuronsPerLayer = parents[0]->getNN()->neuronsPerLayer;
-//    double bias =  1 / (mt_rand() % 999 + 1);
     for (int l = 0; l < parents[0]->getNN()->layers - 1; l++)
         for (int n = 0; n < parents[0]->getNN()->neuronsPerLayer[l]; n++)
             for (int nn = 0; nn < parents[0]->getNN()->neuronsPerLayer[l + 1]; nn++) {
@@ -106,15 +105,19 @@ void NNEvolver::generateNextGen(AIPlayer* players[], AIPlayer* parents[]) {
                 evolvedNN->setWeightAt(l, n, nn, weight / numOfParents);
             }
 
-    for (int p = 0; p < population; p++) {
-        evolvedNN->cloneNetworkInto(players[p]->getNN());
-        int mods = mt_rand() % 10 + 5;
-        for (int m = 0; m < mods; m++) {
-            double noise = ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
-            int l = mt_rand() % (layers - 1);
-            int n = mt_rand() % neuronsPerLayer[l];
-            int nn = mt_rand() % neuronsPerLayer[l + 1];
-            players[p]->getNN()->setWeightAt(l, n, nn, players[p]->getNN()->getWeightaAt(l, n, nn) + noise);
+    if (currGen == gensToEvolve - 1) {
+        evolvedNN->serialize("nn.dat");
+    } else {
+        for (int p = 0; p < population; p++) {
+            evolvedNN->cloneNetworkInto(players[p]->getNN());
+            int mods = mt_rand() % 10 + 5;
+            for (int m = 0; m < mods; m++) {
+                double noise = ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
+                int l = mt_rand() % (layers - 1);
+                int n = mt_rand() % neuronsPerLayer[l];
+                int nn = mt_rand() % neuronsPerLayer[l + 1];
+                players[p]->getNN()->setWeightAt(l, n, nn, players[p]->getNN()->getWeightaAt(l, n, nn) + noise);
+            }
         }
     }
 
