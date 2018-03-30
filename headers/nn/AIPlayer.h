@@ -16,16 +16,15 @@ public:
      * @param tableInfo Information to be used as inputs for the neural network
      * @return Action taken by agent (-1 -> fold, 0 -> call, x > 0 -> raise by 'x')
      */
-    int play(int tableInfo[]);
+    int play(std::vector<double> tableInfo);
 
     void setNN(NeuralNetwork* nn) {delete this->nn; this->nn = nn;}
     NeuralNetwork* getNN() { return nn;}
 private:
-    int handPotential();
+    double getHandPotential(std::vector<Card*> communityCards);
     NeuralNetwork* nn;
 
-    static const int layers = 3;
-    static int neuronsPerLayer[layers]; // Defined in src (5-25-3)
+    static std::vector<int> neuronsPerLayer;
 };
 
 

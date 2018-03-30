@@ -2,6 +2,7 @@
 #define TEXAS_HOLDEM_NN_HAND_H
 
 #include "Card.h"
+#include <vector>
 
 /**
  * Types of hands that can be obtained in Holdem, from best to worst.
@@ -21,7 +22,7 @@ public:
     ~Hand();
 
     // Cards held in this hand
-    Card* pocket[2];
+    std::vector<Card*> pocket;
 
     /**
      * Displays an array of cards, showing their value and suit.
@@ -29,7 +30,7 @@ public:
      * @param cards Array of cards to be displayed
      * @param numOfCards Number of cards in the 'cards' array
      */
-    void displayHand(Card* cards[], int numOfCards = 2);
+    void displayHand(std::vector<Card*> cards, int numOfCards = 2);
     void displayHand();
 
     /**
@@ -40,7 +41,16 @@ public:
      * @param communityCards Array containing the cards that are face up on the table
      * @param topHand Array of size 9, where the data regarding the hand will be written to
      */
-    void recordBestHand(int playerNum, Card* communityCards[], int topHand[]);
+    void recordBestHand(int playerNum, std::vector<Card*> communityCards, std::vector<int> topHand);
+
+    /**
+     * Sorts an array of cards (combination of the cards in the hand, plus the 'flop') by their value
+     *
+     * @param cards Combined array of cards in hand and flop
+     * @param lPiv Left-most point to sort array from
+     * @oaram rPiv Right-most point to sort array from
+     */
+    void quicksortByVal(std::vector<Card*> cards, int lPiv, int rPiv);
 
 private:
     /**
@@ -77,7 +87,7 @@ private:
      * @param cards Array of cards to determine best hand for
      * @param results Array of size 5, where the results or this check are written to
      */
-    void sameVal(Card* cards[], int results[]);
+    void sameVal(std::vector<Card*> cards, std::vector<int> results);
 
     /**
      * Determines if a hand (hand + community cards) has a straight in it. If it does, it returns an array
@@ -88,7 +98,7 @@ private:
      * @param cards Cards to be evaluated
      * @param results Array of size 6, where the results of this check are written to
      */
-    void straightCheck(Card* cards[], int results[]);
+    void straightCheck(std::vector<Card*> cards, std::vector<int> results);
 
     /**
      * Determines if this hand (hand + community cards) has a flush. If it does, it writes 9 numbers to the 'results'
@@ -100,16 +110,7 @@ private:
      * @param cards Array of cards to check for flush
      * @param results Array of size 9, where the results of this check are written to
      */
-    void flushCheck(Card* cards[], int results[]);
-
-    /**
-     * Sorts an array of cards (combination of the cards in the hand, plus the 'flop') by their value
-     *
-     * @param cards Combined array of cards in hand and flop
-     * @param lPiv Left-most point to sort array from
-     * @oaram rPiv Right-most point to sort array from
-     */
-    void quicksortByVal(Card* cards[], int lPiv, int rPiv);
+    void flushCheck(std::vector<Card*> cards, std::vector<int> results);
 };
 
 

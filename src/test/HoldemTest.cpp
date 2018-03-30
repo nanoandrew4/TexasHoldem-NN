@@ -8,7 +8,7 @@
 void HoldemTest::test() {
     Suit SPADES = Suit::SPADES, CLUBS = Suit::CLUBS, HEARTS = Suit::HEARTS, DIAMONDS = Suit::DIAMONDS;
 
-    Card* communityCards[5] = {new Card(SPADES, 5), new Card(HEARTS, 5), new Card(HEARTS, 2),
+    std::vector<Card*> communityCards = {new Card(SPADES, 5), new Card(HEARTS, 5), new Card(HEARTS, 2),
                       new Card(HEARTS, 3), new Card(HEARTS, 4)};
 
     const int handNum = 8;
@@ -30,10 +30,9 @@ void HoldemTest::test() {
     int bestType = HC;
 
     // Compare hands
-    std::vector<int*> bestHands;
+    std::vector<std::vector<int>> bestHands(handNum);
     int activPlayer = 0;
     for (uint p = 0; p < handNum; p++) {
-        bestHands.push_back(new int[9]);
         hands[p]->recordBestHand(p, communityCards, bestHands.at(activPlayer++));
         if (bestHands.back()[1] < bestType)
             bestType = bestHands.back()[1];

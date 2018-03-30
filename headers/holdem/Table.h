@@ -7,7 +7,7 @@
 
 class Table {
 public:
-    Table(Player* players[], int numOfPlayers);
+    Table(std::vector<Player*> players, int numOfPlayers);
     ~Table();
 
     /**
@@ -34,13 +34,13 @@ private:
      * @param tableInfo Array of size (4 + ActivePlayers - 1) where the table information is written to
      * @param currPlayer Player collecting information on the table
      */
-    void getTableInfo(int tableInfo[], Player* currPlayer);
+    void getTableInfo(std::vector<double> tableInfo, Player* currPlayer);
 
     // Face up cards on the table
-    Card* communityCards[5];
+    std::vector<Card*> communityCards;
 
     // Various entities that take special actions during the start of each round
-    Player** players;
+    std::vector<Player*> players;
     Player* dealer;
     Player* smallBlind;
     Player* bigBlind;

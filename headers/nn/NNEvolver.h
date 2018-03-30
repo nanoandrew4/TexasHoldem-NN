@@ -8,13 +8,14 @@ class NNEvolver {
 public:
     NNEvolver();
     ~NNEvolver();
+
 private:
     int population = 1000;
-    int gensToEvolve = 50;
+    int gensToEvolve = 10000;
     int currGen = 0;
-    int numOfParents = 10;
-    static const int itersPerGen = 10;
-    static const int threads = 4;
+    int numOfParents = population / 100;
+    static const int itersPerGen = 5;
+    static const int threads = 1;
 
     static bool threadReady[threads];
 
@@ -25,7 +26,7 @@ private:
      *
      * @param players Array of AIPlayers to be trained
      */
-    void train(AIPlayer* players[]);
+    void train(std::vector<AIPlayer*> players);
 
     /**
      * Training thread, simulates 'itersPerGen' tables, using players in array 'players' between 'startPlayer' index and
@@ -37,7 +38,7 @@ private:
      * @param startPlayer Index of players array this thread should start at
      * @param endPlayer Index of players array this thread should end at
      */
-    void trainThread(AIPlayer* players[], int playersPerTable, int threadNum, int startPlayer, int endPlayer);
+    void trainThread(std::vector<AIPlayer*> players, int playersPerTable, int threadNum, int startPlayer, int endPlayer);
 
     /**
      * Blocks thread until all threads have set their index in threadReady array to true
@@ -47,7 +48,7 @@ private:
     /**
      * Sorts array of agents in descending order, based on how much money they have
      */
-    void quicksort(AIPlayer*[], int, int);
+    void quicksort(std::vector<AIPlayer*>, int, int);
 
     /**
      * Combines the parent players to generate the next generation agent. All other players copy that agent and apply
@@ -56,7 +57,7 @@ private:
      * @param players Array containing all agents
      * @param parents Array containing agents to be combined for the next generation
      */
-    void generateNextGen(AIPlayer* players[], AIPlayer* parents[]);
+    void generateNextGen(std::vector<AIPlayer*> players, std::vector<AIPlayer*> parents);
 };
 
 #endif //TEXAS_HOLDEM_NN_NNEVOLVER_H

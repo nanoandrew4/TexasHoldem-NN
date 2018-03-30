@@ -7,8 +7,7 @@
 class NeuralNetwork {
 public:
     // Information about the network
-    int layers;
-    int* neuronsPerLayer;
+    std::vector<int> neuronsPerLayer;
 
     /**
      * Initializes a network with 'layers' layers and 'n' neurons per layer, where 'n' is each element of
@@ -18,7 +17,7 @@ public:
      * @param neuronsPerLayer Array of integers representing the desired neurons at each layer
      * @param randomize Whether to randomize the initial weights or leave them at initialized values (0)
      */
-    NeuralNetwork(int layers, int neuronsPerLayer[], bool randomize);
+    NeuralNetwork(std::vector<int>& neuronsPerLayer, bool randomize);
     ~NeuralNetwork();
 
     /**
@@ -27,7 +26,7 @@ public:
      * @param input First layer inputs, should be constant in size
      * @return Index of activated neuron
      */
-    int getAction(double[]);
+    int getAction(const std::vector<double>& input);
 
     /**
      * Sets a weight in the network to the desired value.
@@ -37,7 +36,7 @@ public:
      * @param nn Neuron in layer 'l + 1' which is connected by the weight to be set
      * @param val Value to set weight to
      */
-    void setWeightAt(int l, int n, int nn, double val) {weights[l][n][nn] = val;}
+    void setWeightAt(int l, int n, int nn, double val) {weights.at(l).at(n).at(nn) = val;}
 
     /**
      * Returns the value of any given weight in the network.
@@ -47,7 +46,7 @@ public:
      * @param nn Neuron in layer 'l + 1' which is connected by the the weight to be retrieved
      * @return Value of the weight at [l][n][nn]
      */
-    double getWeightaAt(int l, int n, int nn) { return weights[l][n][nn];}
+    double getWeightaAt(int l, int n, int nn) { return weights.at(l).at(n).at(nn);}
 
     /**
      * Returns a pointer to an empty network with the same number of layers, and neurons per layer, as the network it
@@ -79,19 +78,19 @@ public:
      * @param fileName Name of file to read network information from
      * @return Pointer to loaded network
      */
-    static NeuralNetwork* deserialize(std::string fileName);
+    static NeuralNetwork* deserialize(const std::string& fileName);
 
 private:
     // Activation values and weights that compose the network
-    double** activ;
-    double*** weights;
+    std::vector<std::vector<double>> activ;
+    std::vector<std::vector<std::vector<double>>> weights;
 
     /**
      * Forward propagates through the network, using a given set of inputs.
      *
      * @param input Inputs to use for propagation
      */
-    void forward(double input[]);
+    void forward(std::vector<double> input);
 
     // Sigmoid function (standard in NN implementations)
     double sigmoid(double d);

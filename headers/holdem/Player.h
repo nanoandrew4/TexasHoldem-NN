@@ -6,6 +6,7 @@
 #include "../nn/NeuralNetwork.h"
 
 class Player {
+    friend class AIPlayer;
 public:
     Player();
     Player(std::string name);
@@ -53,7 +54,9 @@ public:
      * @params tableInfo Information coming from the table the player is playing at, that might be relevant
      * @return Action taken by player (-1 -> fold, 0 -> call, x > 0 -> raise by 'x')
      */
-    virtual int play(int tableInfo[]);
+    virtual int play(std::vector<double> tableInfo);
+
+    virtual double getHandPotential(std::vector<Card*> communityCards) {};
 
 private:
     static const int initMoney = 10000;

@@ -9,7 +9,7 @@ Player::Player(std::string name) {
 
 Player::~Player() = default;
 
-int Player::play(int tableInfo[]) {
+int Player::play(std::vector<double> tableInfo) {
     std::cout << name << "'s hand: "; hand->displayHand(hand->pocket);
     char opt = ' ';
 
@@ -20,11 +20,11 @@ int Player::play(int tableInfo[]) {
 
     switch (opt) {
         case 'r':
-            std::cout << "Enter how much you would like to raise by (Current: " << tableInfo[0] << "): $";
+            std::cout << "Enter how much you would like to raise by (Current: " << tableInfo.at(0) << "): $";
             int amount;
             std::cin >> amount;
-            while (amount > money || amount < tableInfo[0]) {
-                if (amount <= tableInfo[0])
+            while (amount > money || amount < tableInfo.at(0)) {
+                if (amount <= tableInfo.at(0))
                     std::cout << "Your raise is not bigger than the current bet, try again: $";
                 else if (amount > money)
                     std::cout << "You do not have enough to make that bet, try again: $";
