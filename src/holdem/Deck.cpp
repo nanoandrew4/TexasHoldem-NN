@@ -20,18 +20,17 @@ Deck::Deck(std::vector<Card*> cards) {
 //    for (int i = cardsEliminated; i < cards.size(); i++)
 //        std::cout << cards.at(i)->getCardValue() << cards.at(i)->getSuitSymbol() << std::endl;
     while (cardsEliminated != cards.size()) { // TODO: OPTIMIZE
-        for (int c = 0; c < deck.size() && cardsEliminated != cards.size();) {
+        for (int c = deck.size() - 1; c >= 0 && cardsEliminated != cards.size(); c--) {
 //            std::cout << cards.at(cardsEliminated)->getCardValue() << cards.at(cardsEliminated)->getSuitSymbol() << std::endl;
 //            std::cout << deck.at(c).getCardValue() << deck.at(c).getSuitSymbol() << std::endl << std::endl;
             if (cards.at(cardsEliminated)->getCardValue() == deck.at(c).getCardValue() && cards.at(cardsEliminated)->getSuit() == deck.at(c).getSuit()) {
                 deck.erase(deck.begin() + c);
                 cardsEliminated++;
-            } else
-                c++;
+            }
         }
     }
 
-    pos -= cardsEliminated;
+    pos -= deck.size() - 1;
     shuffle();
 }
 
@@ -48,5 +47,9 @@ void Deck::shuffle() {
 }
 
 Card* Deck::deal() {
+    if (pos == 0) {
+        shuffle();
+        pos = deck.size() - 1;
+    }
     return &deck.at(pos--);
 }

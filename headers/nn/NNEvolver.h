@@ -3,6 +3,11 @@
 
 #include "../holdem/Player.h"
 #include "AIPlayer.h"
+#include <mutex>
+
+enum ThreadStage {
+
+};
 
 class NNEvolver {
 public:
@@ -11,13 +16,14 @@ public:
 
 private:
     int population = 1000;
-    int gensToEvolve = 10000;
+    int gensToEvolve = 1000;
     int currGen = 0;
     int numOfParents = population / 100;
     static const int itersPerGen = 5;
-    static const int threads = 1;
+    static const int threads = 4;
 
-    static bool threadReady[threads];
+    bool threadReady[threads];
+    bool threadLocked[threads];
 
     /**
      * Takes care of initializing the worker threads to simulate a tournament, and after all threads are done,
@@ -39,11 +45,6 @@ private:
      * @param endPlayer Index of players array this thread should end at
      */
     void trainThread(std::vector<AIPlayer*> players, int playersPerTable, int threadNum, int startPlayer, int endPlayer);
-
-    /**
-     * Blocks thread until all threads have set their index in threadReady array to true
-     */
-    void blockUntilReady();
 
     /**
      * Sorts array of agents in descending order, based on how much money they have

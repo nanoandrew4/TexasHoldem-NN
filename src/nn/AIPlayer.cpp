@@ -23,9 +23,9 @@ double AIPlayer::getHandPotential(std::vector<Card*> communityCards) { // TODO: 
     std::vector<int> topHand(9);
     hand->recordBestHand(0, communityCards, topHand);
 
-    double score = topHand[1];
+    double score = topHand.at(1);
     for (int i = 2; i < 9; i++)
-        score += (topHand[i] / 15) / pow(10, i);
+        score += (topHand.at(i) / 15) / pow(10, i - 2);
 
     int numOfCards = communityCards.size() + 2;
     if (numOfCards == 7)
@@ -43,12 +43,12 @@ double AIPlayer::getHandPotential(std::vector<Card*> communityCards) { // TODO: 
 
     cards.push_back(NULL);
     double newAvgScore = 0;
-    for (int c = 0; c < deck.getCardsInDeck(); c++) {
+    for (int c = 0; c < 26; c++) {
         cards.at(numOfCards) = deck.deal();
         hand->recordBestHand(0, communityCards, topHand);
-        double tmpScore = topHand[1];
+        double tmpScore = topHand.at(1);
         for (int i = 2; i < 9; i++)
-            tmpScore += (topHand[i] / 15) / pow(10, i);
+            tmpScore += (topHand.at(i) / 15) / pow(10, i - 2);
         newAvgScore += (tmpScore / deck.getCardsInDeck());
     }
 

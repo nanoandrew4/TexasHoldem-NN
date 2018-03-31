@@ -1,13 +1,17 @@
 #include <iostream>
+#include <thread>
 #include "../../headers/nn/NNEvolver.h"
 #include "../../headers/holdem/Table.h"
 
 static std::mt19937_64 mt_rand((ulong) std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
-bool NNEvolver::threadReady[] = {false};
-
 NNEvolver::NNEvolver() {
     std::vector<AIPlayer*> players;
+
+    for (int t = 0; t < threads; t++) {
+        threadReady[t] = false;
+        threadLocked[t] = true;
+    }
 
     for (int p = 0; p < population; p++)
         players.push_back(new AIPlayer());
@@ -32,22 +36,33 @@ void NNEvolver::train(std::vector<AIPlayer*> players) {
             break;
         }
 
-//    std::thread threads[this->threads];
-//    int startPopPos = 0;
-    int thread = 0;
-//    int popPerThread = (int)((float) (population) / this->threads + 0.5);
+    int popPerThread = (int)((float) (population) / this->threads + 0.5);
+
+    for (int g = 0; g < itersPerGen; g++) {
+        std::vector<std::thread> threads(this->threads);
+        int startPopPos = 0;
+        int thread = 0;
+
+        long start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+        for (; startPopPos < population; startPopPos += popPerThread) {
+            threads.at(thread) = std::thread(&NNEvolver::trainThread, this, players, playersPerTable, thread,
+                                             startPopPos,
+                                             (startPopPos + popPerThread > population ? population : startPopPos +
+                                                                                                     popPerThread));
+            thread++;
+        }
+
+        for (int t = 0; t < this->threads; t++)
+            threads.at(t).join();
+
+        quicksort(players, 0, players.size() - 1);
+
+//        std::cout << "Training took: "
+//                  << std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000 - start << "ms"
+//                  << std::endl;
+    }
 
     long start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-//    for (; startPopPos < population; startPopPos += popPerThread)
-//        threads[thread++] = std::thread(&NNEvolver::trainThread, this, players, playersPerTable, thread, startPopPos,
-//                                      (startPopPos + popPerThread > population ? population : startPopPos + popPerThread));
-    trainThread(players, playersPerTable, thread, 0, population - 1);
-//    for (int t = 0; t < this->threads; t++)
-//        threads[t].join();
-
-    std::cout << "Training took: " << std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000 - start << "ms" << std::endl;
-
-    start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
     std::vector<AIPlayer*> parents(numOfParents);
     for (int p = 0; p < numOfParents; p++) {
         parents.at(p) = players.at(p);
@@ -55,38 +70,17 @@ void NNEvolver::train(std::vector<AIPlayer*> players) {
     }
 
     generateNextGen(players, parents);
-    std::cout << "Evolution took: " << std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000 - start << "ms" << std::endl;
+//    std::cout << "Evolution took: " << std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000 - start << "ms" << std::endl;
 }
 
 void NNEvolver::trainThread(std::vector<AIPlayer*> players, int playersPerTable, int threadNum, int startPlayer, int endPlayer) {
-    for (int i = 0; i < itersPerGen; i++) {
-//        std::cout << "Starting iteration " << i << std::endl;
-//        threadReady[threadNum] = false;
-        for (int t = startPlayer / playersPerTable; t < endPlayer / playersPerTable; t++) {
-            std::vector<Player*> tablePlayers(playersPerTable);
-            for (int p = 0; p < playersPerTable; p++)
-                tablePlayers.at(p) = players.at(t * playersPerTable + p);
-//        std::cout << "Playing table: " << t << std::endl;
-//        std::cout << tablePlayers[t][0]->playing << std::endl;
-            Table table(tablePlayers, playersPerTable);
-            table.play();
-        }
-//        threadReady[threadNum] = true;
-//        blockUntilReady();
-//        threadReady[threadNum] = false;
-
-//        if (threadNum == 0)
-        quicksort(players, 0, population - 1);
-
-//        threadReady[threadNum] = true;
-//        blockUntilReady();
+    for (int t = startPlayer / playersPerTable; t < endPlayer / playersPerTable; t++) {
+        std::vector<Player*> tablePlayers(playersPerTable);
+        for (int p = 0; p < playersPerTable; p++)
+            tablePlayers.at(p) = players.at(t * playersPerTable + p);
+        Table table(tablePlayers, playersPerTable);
+        table.play();
     }
-}
-
-void NNEvolver::blockUntilReady() {
-    for (int t = 0; t < threads;)
-        if (threadReady[t])
-            t++;
 }
 
 void NNEvolver::generateNextGen(std::vector<AIPlayer*> players, std::vector<AIPlayer*> parents) {
@@ -104,6 +98,7 @@ void NNEvolver::generateNextGen(std::vector<AIPlayer*> players, std::vector<AIPl
             }
 
     if (currGen == gensToEvolve - 1) {
+        std::cout << "Serialized" << std::endl;
         evolvedNN->serialize("nn.dat");
     } else {
         for (int p = 0; p < population; p++) {
@@ -112,8 +107,8 @@ void NNEvolver::generateNextGen(std::vector<AIPlayer*> players, std::vector<AIPl
             for (int m = 0; m < mods; m++) {
                 double noise = ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
                 int l = mt_rand() % (layers - 1);
-                int n = mt_rand() % neuronsPerLayer[l];
-                int nn = mt_rand() % neuronsPerLayer[l + 1];
+                int n = mt_rand() % neuronsPerLayer.at(l);
+                int nn = mt_rand() % neuronsPerLayer.at(l + 1);
                 players.at(p)->getNN()->setWeightAt(l, n, nn, players.at(p)->getNN()->getWeightaAt(l, n, nn) + noise);
             }
         }

@@ -42,7 +42,7 @@ void Hand::recordBestHand(int playerNum, std::vector<Card*> communityCards, std:
     topHand.push_back(playerNum);
 
     int numOfCards = communityCards.size() + 2;
-    
+
     std::vector<Card*> cards;
     for (int c = 0; c < 2; c++)
         cards.push_back(pocket.at(c));
@@ -73,9 +73,10 @@ void Hand::recordBestHand(int playerNum, std::vector<Card*> communityCards, std:
     if (straightRes.at(0) == 1 && flushRes.at(0) == 1) { // Verify straight flush (and royal flush)
         for (int c = 0; c < 4; c++) {
             if (cards.at(c)->getCardValue() == straightRes.at(1)) {
-                int matches = 0;
-                for (int cc = 0; cc < 9 && matches < 5; cc++)
-                    if (cards.at(cc % numOfCards)->getCardValue() == straightRes.at(matches + 1) && flushRes.at((cc % numOfCards) + 1) == 1)
+                int suit = flushRes.at(c);
+                int matches = flushRes.at(c + 1) == suit ? 1 : 0;
+                for (int cc = c + 1; cc < 9 && matches < 5; cc++)
+                    if (cards.at(cc % numOfCards)->getCardValue() == straightRes.at(matches + 1) && flushRes.at((cc % numOfCards) + 1) == suit)
                         matches++;
                 if (matches == 5) {
                     topHand.push_back(STR_FLUSH);
@@ -141,7 +142,7 @@ void Hand::sameVal(std::vector<Card*> cards, std::vector<int> results) {
     // Two card values of most interest (read as 'Card Of Interest'). First element is more interesting than the second
     std::vector<int> coi(2, 0);
 
-    for (int c = 1; c < 15; c++) { // Runs through all values and determines which card values will give the best hand
+    for (int c = 2; c < 15; c++) { // Runs through all values and determines which card values will give the best hand
         for (int cois = 0; cois < 2; cois++) {
             if (vals.at(c) >= vals.at(coi.at(cois))) {
                 if (cois == 0) {
@@ -231,16 +232,10 @@ void Hand::flushCheck(std::vector<Card*> cards, std::vector<int> results) {
         results.at(c + 1) = cards.at(c)->getSuit();
     }
 
-    // Any suit not belonging to the flush has its index in results set to 0, otherwise 1
     for (int s = 0; s < 4; s++) {
         if (suits.at(s) > 4) {
             results.at(0) = 1;
-            for (int c = 0; c < cards.size(); c++) {
-                if (cards.at(c)->getSuit() == s)
-                    results.at(c + 1) = 1;
-                else
-                    results.at(c + 1) = 0;
-            }
+            return;
         }
     }
 }
