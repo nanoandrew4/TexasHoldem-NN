@@ -5,28 +5,35 @@
 
 static std::mt19937_64 mt_rand((ulong) std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
-NNEvolver::NNEvolver() {
-    std::vector<AIPlayer*> players;
+NNEvolver::NNEvolver(int pop, int gensToEvolve, int numOfParents, int itersPerGen, int threads) {
+    this->population = pop;
+    this-> gensToEvolve = gensToEvolve;
+    this->numOfParents = numOfParents;
+    this->itersPerGen = itersPerGen;
+    this->threads = threads;
+}
 
-    for (int t = 0; t < threads; t++) {
-        threadReady[t] = false;
-        threadLocked[t] = true;
-    }
+NNEvolver::~NNEvolver() {}
+
+void NNEvolver::setOutFileName(std::string fileName) {
+    outFileName = fileName;
+}
+
+void NNEvolver::evolve() {
+    std::vector<AIPlayer*> players;
 
     for (int p = 0; p < population; p++)
         players.push_back(new AIPlayer());
 
     std::cout << "Training" << std::endl;
-    for (int g = 0; g < gensToEvolve; g++) {
+    for (; currGen < gensToEvolve; currGen++) {
         train(players);
-        std::cout << "Finished training gen: " << g << std::endl;
+        std::cout << "Finished training gen: " << currGen << std::endl;
     }
 
     for (int t = 0; t < population; t++)
         delete players.at(t);
 }
-
-NNEvolver::~NNEvolver() {}
 
 void NNEvolver::train(std::vector<AIPlayer*> players) {
     int playersPerTable = 2;
@@ -78,7 +85,7 @@ void NNEvolver::trainThread(std::vector<AIPlayer*> players, int playersPerTable,
         std::vector<Player*> tablePlayers(playersPerTable);
         for (int p = 0; p < playersPerTable; p++)
             tablePlayers.at(p) = players.at(t * playersPerTable + p);
-        Table table(tablePlayers, playersPerTable);
+        Table table(tablePlayers);
         table.play();
     }
 }
@@ -98,8 +105,7 @@ void NNEvolver::generateNextGen(std::vector<AIPlayer*> players, std::vector<AIPl
             }
 
     if (currGen == gensToEvolve - 1) {
-        std::cout << "Serialized" << std::endl;
-        evolvedNN->serialize("nn.dat");
+        evolvedNN->serialize(outFileName + ".dat");
     } else {
         for (int p = 0; p < population; p++) {
             evolvedNN->cloneNetworkInto(players[p]->getNN());

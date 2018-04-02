@@ -2,43 +2,59 @@
 #include "../../headers/holdem/Deck.h"
 #include "../../headers/holdem/Player.h"
 #include "../../headers/holdem/Table.h"
-#include "../../headers/test/HoldemTest.h"
 #include "../../headers/nn/NNEvolver.h"
+#include "../../headers/test/DeckTest.h"
 
 int main() {
-/*
-    Player* players[4] = {new Player("Steve"), new Player("Andy"), new Player("Stu"), new Player("Jack")};
-    Table t(players, 4);
-    t.play();
 
-    delete players[0];
-    delete players[1];
-    delete players[2];
-    delete players[3];
-*/
+    std::cout << "Preliminary testing..." << std::endl;
+    DeckTest::test();
 
-//    HoldemTest t;
-//    t.test();
+    std::cout << std::endl;
 
-    NNEvolver nnEvolver;
-/*
-    Deck dd;
-    std::vector<Card*> cards(5);
-    for (int i = 0; i < 5; i++)
-        cards.at(i) = dd.deal();
+    do {
+        std::cout << "Welcome to TexasHoldemNN - Where you can play your computer in a game of Texas Hold'em poker"
+                  << std::endl;
+        std::cout << "FYI, your name is now Steve. Get used to it!" << std::endl << std::endl;
+        std::cout << "1. Play against AI agent" << std::endl;
+        std::cout << "2. Train AI agent(s)" << std::endl;
+        std::cout << "0. Exit" << std::endl << std::endl;
 
-    Deck d;
-    std::vector<int> vals(9);
-    long time = 0;
-    long start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-    for (int i = 0; i < 1000000; i++) {
-        Hand hand(d.deal(), d.deal());
-        hand.recordBestHand(0, cards, vals);
-    }
+        int opt;
+        std::string file;
 
-    std::cout << "Calc took: "
-              << std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000 - start << "ms"
-              << std::endl;
-              */
+        do {
+            std::cout << ">> ";
+            std::cin >> opt;
+        } while (opt < 0 || opt > 2);
+
+        if (opt == 1) {
+            std::cout << "Enter number of agents to play against: ";
+            std::cin >> opt;
+
+            std::vector<Player *> players;
+            players.push_back(new Player("Steve"));
+
+            std::cout << "Enter the paths to the \".dat\" files to load the agents from" << std::endl;
+
+            for (int i = 0; i < opt; i++) {
+                std::cin >> file;
+                players.push_back(new AIPlayer());
+            }
+
+            Table table(players);
+            table.play();
+        } else if (opt == 2) {
+            std::cout << "Enter population size, generations to evolve, number of parents, game iterations per "
+                      << "generation and number of threads to be used" << std::endl;
+            NNEvolver evolver(std::cin.get(), std::cin.get(), std::cin.get(), std::cin.get(), std::cin.get());
+            std::cout << "Enter filename to save agent data to: ";
+            std::cin >> file;
+            evolver.setOutFileName(file);
+            evolver.evolve();
+        } else if (opt == 0)
+            break;
+    } while (true);
+
     return 0;
 }

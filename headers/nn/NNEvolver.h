@@ -5,25 +5,23 @@
 #include "AIPlayer.h"
 #include <mutex>
 
-enum ThreadStage {
-
-};
-
 class NNEvolver {
 public:
-    NNEvolver();
+    NNEvolver(int pop, int gensToEvolve, int numOfParents, int itersPerGen, int threads);
     ~NNEvolver();
 
-private:
-    int population = 1000;
-    int gensToEvolve = 1000;
-    int currGen = 0;
-    int numOfParents = population / 100;
-    static const int itersPerGen = 5;
-    static const int threads = 4;
+    void evolve();
 
-    bool threadReady[threads];
-    bool threadLocked[threads];
+    void setOutFileName(std::string fileName);
+private:
+    int population;
+    int gensToEvolve;
+    int currGen = 0;
+    int numOfParents;
+    int itersPerGen;
+    int threads;
+
+    std::string outFileName;
 
     /**
      * Takes care of initializing the worker threads to simulate a tournament, and after all threads are done,

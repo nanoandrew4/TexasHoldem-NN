@@ -2,13 +2,15 @@
 #include <iostream>
 #include "../../headers/holdem/Card.h"
 
-Card::Card(Suit s, int val) {
-    if (val > 14 || val < 2 || s < 0 || s > 3) {
+Card::Card(Suit suit, int cardVal) {
+    // Force quit if erroneous card data is encountered
+    if (cardVal > 14 || cardVal < 2 || suit < 0 || suit > 3) {
         std::cout << "Bad card data" << std::endl;
         exit(1);
     }
-    this->suit = s;
-    this->cardValue = val;
+
+    this->suit = suit;
+    this->cardValue = cardVal;
 }
 
 char Card::getSuitSymbol() const {

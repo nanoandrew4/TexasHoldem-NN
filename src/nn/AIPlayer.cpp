@@ -8,6 +8,10 @@ AIPlayer::AIPlayer() {
     nn = new NeuralNetwork(neuronsPerLayer, true);
 }
 
+AIPlayer::AIPlayer(std::string agentFile) {
+    nn = NeuralNetwork::deserialize(agentFile);
+}
+
 AIPlayer::~AIPlayer() {
     delete nn;
 }

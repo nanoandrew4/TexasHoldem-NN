@@ -9,33 +9,48 @@
  * Contains 52 cards, like a regular deck, with 13 cards per suit.
  */
 class Deck {
-private:
-    std::vector<Card> deck;
-
-    // Position to read card value from (allows simulating that the deck size decreases when a card is drawn)
-    int pos = 51;
-
-    // Shuffles the deck, by randomly swapping cards.
-    void shuffle();
-
 public:
-    // Fills deck with 52 cards, one of each suit and value
+    /**
+     * Fills deck with the cards found in a standard deck (52 cards).
+     */
     Deck();
 
-    // Fills deck with 52 cards, minus any cards contained in the 'cards' vector
-    Deck(std::vector<Card*> cards);
+    /**
+     * Fills deck with cards found in a standard deck, but excludes those contained
+     * in the 'cards' vector passed.
+     *
+     * @param cards Cards to be excluded from deck
+     */
+    explicit Deck(std::vector<Card *> cards);
 
-    // Cleans up deck array
     ~Deck();
 
     /**
-     * Returns a pointer to the card on the top of the deck, and decreases 'pos', simulating the card being removed.
-     * @return Pointer to card on top of the deck
+     * Returns a pointer to the card on the top of the deck, and decreases 'pos',
+     * simulating the card being removed.
+     *
+     * If the deck runs out of cards, it will shuffle itself and reset 'pos', allowing
+     * for one deck instance to be used indefinitely.
+     *
+     * @return Pointer to card dealt
      */
-    Card* deal();
+    Card *deal();
 
-    int getCardsInDeck() {return (int)deck.size();}
+    /**
+     * Returns the number of cards in the deck (initially).
+     *
+     * @return Integer representation of size of deck
+     */
+    int getCardsInDeck() const { return (int) deck.size(); }
+
+private:
+    std::vector<Card> deck;
+
+    // Position to read card value from (allows simulating cards being drawn)
+    int pos;
+
+    // Shuffles the deck, by randomly swapping cards.
+    void shuffle();
 };
-
 
 #endif //TEXAS_HOLDEM_NN_DECK_H

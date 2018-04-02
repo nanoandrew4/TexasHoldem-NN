@@ -2,13 +2,13 @@
 #include <utility>
 #include "../../headers/holdem/Table.h"
 
-Table::Table(std::vector<Player*> players, int numOfPlayers) {
+Table::Table(std::vector<Player*> players) {
     if (numOfPlayers < 2) {
         std::cout << "Table must have at least 2 players" << std::endl;
         return;
     }
     this->players = std::move(players);
-    this->numOfPlayers = numOfPlayers;
+    this->numOfPlayers = players.size();
 }
 
 Table::~Table() {};

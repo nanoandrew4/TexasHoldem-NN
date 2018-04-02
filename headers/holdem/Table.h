@@ -7,7 +7,7 @@
 
 class Table {
 public:
-    Table(std::vector<Player*> players, int numOfPlayers);
+    Table(std::vector<Player*> players);
     ~Table();
 
     /**

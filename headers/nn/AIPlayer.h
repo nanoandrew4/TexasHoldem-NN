@@ -7,6 +7,8 @@
 class AIPlayer : public Player {
 public:
     AIPlayer();
+    AIPlayer(std::string agentFile);
+
     ~AIPlayer();
 
     /**

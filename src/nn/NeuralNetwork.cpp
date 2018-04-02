@@ -61,22 +61,33 @@ void NeuralNetwork::serialize(std::string fileName) {
 }
 
 NeuralNetwork* NeuralNetwork::deserialize(const std::string& fileName) {
-    std::ifstream in(fileName);
+    std::ifstream* in = new std::ifstream(fileName);
+
+    std::string file;
+    while (!in->is_open()) {
+        std::cout << "Error deserializing agent file, please try entering the path to the file again... ";
+        std::cin >> file;
+
+        delete in;
+        in = new std::ifstream(file);
+    }
+
     int layers;
-    in >> layers;
+    *in >> layers;
 
     std::vector<int> neuronsPerLayer(layers);
     for (int l = 0; l < layers; l++)
-        in >> neuronsPerLayer.at(l);
+        *in >> neuronsPerLayer.at(l);
 
     NeuralNetwork* nNet = new NeuralNetwork(neuronsPerLayer, false);
 
     for (int l = 0; l < layers - 1; l++)
         for (int n = 0; n < neuronsPerLayer.at(l); n++)
             for (int nn = 0; nn < neuronsPerLayer.at(l + 1); nn++)
-                in >> nNet->weights.at(l).at(n).at(nn);
-    in.close();
+                *in >> nNet->weights.at(l).at(n).at(nn);
+    in->close();
 
+    delete in;
     return nNet;
 }
 
