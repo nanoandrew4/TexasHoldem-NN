@@ -5,113 +5,78 @@
 #include <vector>
 
 /**
- * Types of hands that can be obtained in Holdem, from best to worst.
+ * Types of hands that can be obtained in Texas Hold'em, from worst to best.
  */
 enum Hands {
-    STR_FLUSH, FOUR_OAK, FH, FLUSH, STRT, THREE_OAK, TWO_PAIR, PAIR, HC
+    HC, PAIR, TWO_PAIR, THREE_OAK, STRT, FLUSH, FH, FOUR_OAK, STR_FLUSH
 };
 
 /**
  * Contains data for a hand of cards, which is composed of two cards.
- * This class also contains functions that allow to determine the best hand the player has, using the 'flop' in
- * combination with the two cards contained in this class.
+ * Also contains functions that allow to determine the score of a hand.
  */
 class Hand {
 public:
-    Hand(Card* c1, Card* c2);
+    Hand(Card *c1, Card *c2);
+
     ~Hand();
 
-    // Cards held in this hand
-    std::vector<Card*> pocket;
+    // Cards held in this hand (2)
+    std::vector<Card *> pocket;
 
     /**
-     * Displays an array of cards, showing their value and suit.
+     * Displays a vector of cards, showing their value and suit.
      *
-     * @param cards Array of cards to be displayed
-     * @param numOfCards Number of cards in the 'cards' array
+     * @param cards Vector of cards to be displayed
      */
-    void displayHand(std::vector<Card*> cards, int numOfCards = 2);
+    static void displayHand(std::vector<Card *> cards);
+
     void displayHand();
 
     /**
-     * Using the flop (community cards, the ones on the table) and this hand, returns the best hand that can be played,
-     * along with some information that can be used to break ties in the event that two players have the same hand type.
+     * Using the community cards and this hand, returns the score of this hand. Higher scores indicate better hands.
+     * Calls valComboCheck(), straightCheck() and flushCheck().
      *
-     * @param playerNum Player number at the table
-     * @param communityCards Array containing the cards that are face up on the table
-     * @param topHand Array of size 9, where the data regarding the hand will be written to
+     * @param communityCards Vector containing Card pointers that are face up on the table
      */
-    void recordBestHand(int playerNum, std::vector<Card*> communityCards, std::vector<int> topHand);
+    double getHandScore(std::vector<Card *> communityCards);
 
     /**
-     * Sorts an array of cards (combination of the cards in the hand, plus the 'flop') by their value
+     * Sorts a vector of card pointers by their value, in descending order.
      *
-     * @param cards Combined array of cards in hand and flop
+     * @param cards Vector of Card pointers
      * @param lPiv Left-most point to sort array from
      * @oaram rPiv Right-most point to sort array from
      */
-    static void quicksortByVal(std::vector<Card*> cards, int lPiv, int rPiv);
+    static void quicksortByVal(std::vector<Card *> cards, int lPiv, int rPiv);
 
 private:
     /**
-     * Checks array of cards (combination of the cards in the hand, plus the community cards) for four of a kind,
-     * full house, three of a kind, two pairs or a pair. The results array stores the best option, plus some
-     * information required in case two hands have the same hand type, to break a tie.
+     * Checks vector of cards for four of a kind, full house, three of a kind, two pairs or a pair.
+     * If any of the above are found, the appropriate score is returned. Otherwise a score of 0 is returned.
      *
-     * If Four of a kind:
-     * results[0] -> 4 (representing four of a kind)
-     * results[1] -> Value of the cards forming the 4 of a kind
-     * results[2] -> High card that is not a part of the 4 of a kind (also known as first kicker kicker)
-     *
-     * If Full House:
-     * results[0] -> 32 (Three of a kind + pair, simply for representation)
-     * results[1] -> Value of three of a kind that forms the full house
-     * results[2] -> Value of pair that forms the full house
-     *
-     * If Three of a kind:
-     * results[0] -> 3 (representing three of a kind)
-     * results[1] -> Value of the cards forming the 3 of a kind
-     * results[2-3] -> 2 Highest kickers (cards that do not form part of the three of a kind)
-     *
-     * If Two pairs:
-     * results[0] -> 22 (representing pair + pair)
-     * results[1] -> High pair
-     * results[2] -> Second highest pair
-     * results[3-4] -> 2 Highest kickers (cards that do not form part of either of the pairs)
-     *
-     * If Pair:
-     * results[0] -> 2 (representing pair)
-     * results[1] -> Highest pair
-     * results[2-4] -> 3 Highest kickers (cards that do not form part of the pair)
-     *
-     * @param cards Array of cards to determine best hand for
-     * @param results Array of size 5, where the results or this check are written to
+     * @param cards Vector of Card pointers to evaluate
      */
-    void sameVal(std::vector<Card*> cards, std::vector<int> results);
+    double valComboCheck(std::vector<Card *> cards);
 
     /**
-     * Determines if a hand (hand + community cards) has a straight in it. If it does, it returns an array
+     * Determines if a vector of Card pointers has a straight in it. If it does, it returns an array
      * containing a 1 as its first element, and the values composing the straight after that.
      *
-     * If there is no straight, an array of 0's is written to 'results'.
-     *
-     * @param cards Cards to be evaluated
-     * @param results Array of size 6, where the results of this check are written to
+     * @param cards Vector of card pointers to evaluate
+     * @param results Integer vector of size 6, where the results of this check are written to
      */
-    void straightCheck(std::vector<Card*> cards, std::vector<int> results);
+    void straightCheck(std::vector<Card *> cards, std::vector<int> results);
 
     /**
-     * Determines if this hand (hand + community cards) has a flush. If it does, it writes 9 numbers to the 'results'
-     * array. 1 is written to results[0], and 8 binary digits, with 1 representing that the card belongs to the flush
-     * and 0 representing that the card does not belong to the flush, which are written to results[1-8].
+     * Determines if a vector of Card pointers has a flush. If it does, it writes 9 numbers to the 'results'
+     * vector. If a flush exists, the suit the flush is composed of is written to results[0]. Otherwise results[0] is -1.
+     * 8 digits, representing the different suits, are written to results[1-8].
      *
-     * If there is no flush, an array of 0's is written to 'results'
-     *
-     * @param cards Array of cards to check for flush
-     * @param results Array of size 9, where the results of this check are written to
+     * @param cards Vector of Card pointers to check for flush
+     * @param results Integer vector of size 9, where the results of this check are written to
      */
-    void flushCheck(std::vector<Card*> cards, std::vector<int> results);
+    void flushCheck(std::vector<Card *> cards, std::vector<int> results);
 };
-
 
 #endif //TEXAS_HOLDEM_NN_HAND_H

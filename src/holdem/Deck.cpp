@@ -1,5 +1,4 @@
 #include <iostream>
-#include <algorithm>
 #include "../../headers/holdem/Deck.h"
 
 static std::mt19937_64 mt_rand((ulong) std::chrono::high_resolution_clock::now().time_since_epoch().count());
@@ -50,7 +49,7 @@ Card *Deck::deal() {
     // To prevent breaking, decks can be reused. Re-shuffle and reset pos if deck "runs out"
     if (pos == 0) {
         shuffle();
-        pos = deck.size() - 1;
+        pos = deck.size();
     }
 
     return &deck.at(--pos);

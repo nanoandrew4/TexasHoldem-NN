@@ -102,45 +102,45 @@ void Table::play() {
         }
 
         if (activePlayers > 1) { // Determine winner(s) and split pot if necessary
-            int bestType = HC;
+            double bestHand = 0;
+            int winners = activePlayers;
 
             // Compare hands
-            std::vector<std::vector<int>> bestHands(activePlayers);
-            int activPlayer = 0;
+            std::vector<int> bestHands(numOfPlayers);
             for (int p = 0; p < numOfPlayers; p++) {
                 if (players.at(p)->isPlaying()) {
-                    bestHands.at(activPlayer).resize(9);
-                    players.at(p)->hand->recordBestHand(p, communityCards, bestHands.at(activPlayer));
-                    if (bestHands.at(activPlayer).at(1) < bestType)
-                        bestType = bestHands.at(activPlayer).at(1);
-                    activPlayer++;
+                    players.at(p)->hand->getHandScore(communityCards);
+                    if (bestHands.at(p) < bestHand)
+                        bestHand = bestHands.at(1);
                 }
             }
 
             // Erase all players with hands worse than the best type from the pool of potential victors
             for (ulong ap = 0; ap < bestHands.size();) {
-                if (bestHands.at(ap).at(1) > bestType)
-                    bestHands.erase(bestHands.begin() + ap);
-                else
+                if (bestHands.at(1) > bestHand) {
+                    bestHands.at(ap) = 0;
+                    winners--;
+                } else
                     ap++;
             }
 
             // If players have same hand type, compare values to determine winner
-            for (int hs = 2; bestHands.size() > 1 && hs < 9; hs++)
-                for (ulong h = 0; h < bestHands.size() - 1;) {
-                    if (bestHands.at(h).at(hs) > bestHands.at(h + 1).at(hs))
-                        bestHands.erase(bestHands.begin() + h + 1);
-                    else if (bestHands.at(h).at(hs) < bestHands.at(h + 1).at(hs))
-                        bestHands.erase(bestHands.begin() + h);
-                    else
-                        h++;
-                }
+            for (ulong h = 0; h < bestHands.size() - 1;) {
+                if (bestHands.at(h) > bestHands.at(h + 1)) {
+                    bestHands.at(h + 1) = 0;
+                    winners--;
+                } else if (bestHands.at(h) < bestHands.at(h + 1)) {
+                    bestHands.at(h) = 0;
+                    winners--;
+                } else
+                    h++;
+            }
 
             // Split pot amongst winners (if more than one player has the winning hand)
             for (int wp = 0; wp < bestHands.size(); wp++) {
 //                std::cout << players.at(bestHands.at(wp).at(0))->getName() << " won" << std::endl << std::endl;
-                players.at(bestHands.at(wp).at(0))->collectWinnings(pot / (bestHands.size() - wp));
-                pot -= pot / (bestHands.size() - wp);
+                if (bestHands.at(wp) != 0)
+                    players.at(wp)->collectWinnings(pot / winners);
             }
         } else // Last standing player takes all the cash
             for (int p = 0; p < numOfPlayers; p++)

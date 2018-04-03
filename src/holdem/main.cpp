@@ -4,11 +4,13 @@
 #include "../../headers/holdem/Table.h"
 #include "../../headers/nn/NNEvolver.h"
 #include "../../headers/test/DeckTest.h"
+#include "../../headers/test/HandTest.h"
 
 int main() {
 
     std::cout << "Preliminary testing..." << std::endl;
     DeckTest::test();
+    HandTest::test();
 
     std::cout << std::endl;
 
