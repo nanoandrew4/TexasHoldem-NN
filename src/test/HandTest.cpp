@@ -16,20 +16,19 @@ void HandTest::test() {
 }
 
 void HandTest::testStraightFlush() {
-    for (int s = 0; s < 4; s++)
-        for (int extraCards = 1; extraCards < 2; extraCards++) {
-            Deck d;
-            for (int c = 5; c < 14; c++) {
-                Card c1((Suit) s, (c + 7) % 13 + 2), c2((Suit) s, c - 3);
+    for (int suit = 0; suit < 4; suit++)
+        for (int extraCards = 0; extraCards < 3; extraCards++) {
+            for (int cardVal = 5; cardVal < 14; cardVal++) {
+                Deck d;
+                Card c1((Suit) suit, (cardVal + 7) % 13 + 2), c2((Suit) suit, cardVal - 3);
                 Hand hand(&c1, &c2);
                 std::vector<Card *> commCards(3 + extraCards);
-                for (int h = 0; h < 3; h++)
-                    commCards.at(h) = new Card((Suit) s, c - h);
+                for (int h = 0; h < 3; h++) commCards.at(h) = new Card((Suit) suit, cardVal - h);
 
                 for (int ec = 0; ec < extraCards; ec++) {
-                    Card* c;
-                    while ((c = d.deal())->getSuit() == s);
-                    commCards.at(3 + ec) = c;
+                    Card *card;
+                    while ((card = d.deal())->getSuit() == suit);
+                    commCards.at(3 + ec) = card;
                 }
 
                 double score = hand.getHandScore(commCards);
@@ -42,45 +41,84 @@ void HandTest::testStraightFlush() {
 }
 
 void HandTest::testFourOfAKind() {
-    for (int s = 0; s < 4; s++)
-        for (int c = 2; c < 14; c++) {
-            Card c1((Suit) s, c), c2((Suit) s, c);
-            Hand hand(&c1, &c2);
-            std::vector<Card*> commCards(2);
-            for (int h = 0; h < 2; h++)
-                commCards.at(h) = new Card((Suit) s, c);
+    for (int suit = 0; suit < 4; suit++)
+        for (int extraCards = 0; extraCards < 4; extraCards++) {
+            for (int cardVal = 2; cardVal < 14; cardVal++) {
+                Deck d;
+                Card c1((Suit) suit, cardVal), c2((Suit) suit, cardVal);
+                Hand hand(&c1, &c2);
+                std::vector<Card *> commCards(2 + extraCards);
+                for (int cc = 0; cc < 2; cc++) commCards.at(cc) = new Card((Suit) suit, cardVal);
 
-            double score = hand.getHandScore(commCards);
-            if (score <= FOUR_OAK || score >= STR_FLUSH) {
-                testFail("Four of a kind", hand.pocket, commCards);
-                return;
+                for (int ec = 0; ec < extraCards; ec++) {
+                    Card *card;
+                    while ((card = d.deal())->getCardValue() == cardVal);
+                    commCards.at(2 + ec) = card;
+                }
+
+                double score = hand.getHandScore(commCards);
+                if (score <= FOUR_OAK || score >= STR_FLUSH) {
+                    testFail("Four of a kind", hand.pocket, commCards);
+                    return;
+                }
             }
         }
 }
 
 void HandTest::testFullHouse() {
-    for (int s = 0; s < 4; s++)
-        for (int cc = 2; cc < 14; cc++)
-            for (int c = 3; c < 14; c++) {
-                if (c == cc)
-                    continue;
+    for (int suit = 0; suit < 4; suit++)
+        for (int extraCards = 0; extraCards < 3; extraCards++)
+            for (int communityCardVal = 2; communityCardVal < 14; communityCardVal++) {
+                Deck d;
+                for (int cardVal = 2; cardVal < 14; cardVal++) {
+                    if (cardVal == communityCardVal)
+                        continue;
 
-                Card c1((Suit) s, c), c2((Suit) s, c);
-                Hand hand(&c1, &c2);
-                std::vector<Card*> commCards(3);
-                for (int h = 0; h < 3; h++)
-                    commCards.at(h) = new Card((Suit) ((s + 1) % 4), cc);
+                    Card c1((Suit) suit, cardVal), c2((Suit) suit, cardVal);
+                    Hand hand(&c1, &c2);
+                    std::vector<Card *> commCards(3 + extraCards);
+                    for (int h = 0; h < 3; h++) commCards.at(h) = new Card((Suit) ((suit + 1) % 4), communityCardVal);
 
-                double score = hand.getHandScore(commCards);
-                if (score <= FH|| score >= FOUR_OAK) {
-                    testFail("Full House", hand.pocket, commCards);
-                    return;
+                    for (int ec = 0; ec < extraCards; ec++) {
+                        Card *card;
+                        while ((card = d.deal())->getCardValue() == cardVal ||
+                               card->getCardValue() == communityCardVal);
+                        commCards.at(3 + ec) = card;
+                    }
+
+                    double score = hand.getHandScore(commCards);
+                    if (score <= FH || score >= FOUR_OAK) {
+                        testFail("Full House", hand.pocket, commCards);
+                        return;
+                    }
                 }
             }
 }
 
 void HandTest::testFlush() {
+    for (int suit = 0; suit < 4; suit++)
+        for (int extraCards = 0; extraCards < 3; extraCards++) {
+            for (int cardVal = 3; cardVal < 14; cardVal++) {
+                Deck d;
+                Card c1((Suit) suit, cardVal - 1), c2((Suit) suit, cardVal);
+                Hand hand(&c1, &c2);
 
+                std::vector<Card *> commCards(3 + extraCards);
+
+                Card* card;
+                for (int c = 0; c < 3 + extraCards; c++) {
+                    while ((card = d.deal())->getSuit() != suit);
+                    commCards.at(c) = card;
+                }
+
+                double score = hand.getHandScore(commCards);
+                if (score <= FLUSH) {
+                    testFail("Flush", hand.pocket, commCards);
+                    std::cout << score << std::endl;
+                    return;
+                }
+            }
+        }
 }
 
 void HandTest::testStraight() {
@@ -103,7 +141,7 @@ void HandTest::testHighCard() {
 
 }
 
-void HandTest::testFail(std::string testName, std::vector<Card*> pocket, std::vector<Card*> commCards) {
+void HandTest::testFail(std::string testName, std::vector<Card *> pocket, std::vector<Card *> commCards) {
     std::cout << "Hand -> " << testName << " test failed... Cards: ";
     commCards.insert(commCards.end(), pocket.begin(), pocket.end());
     Hand::quicksortByVal(commCards, 0, commCards.size() - 1);

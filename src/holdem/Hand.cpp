@@ -44,42 +44,40 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
     cards.insert(cards.end(), communityCards.begin(), communityCards.end());
     quicksortByVal(cards, 0, cards.size() - 1);
 
-    std::vector<int> straightRes(6, 0);
+    std::vector<int> straightRes(8, 0);
     straightCheck(cards, straightRes);
 
     std::vector<int> flushRes(8, 0);
     flushCheck(cards, flushRes);
 
     if (straightRes.at(0) == 1 && flushRes.at(0) != -1) // Verify straight flush (and royal flush)
-
-        for (int c = 0; c < 4; c++)
-            if (cards.at(c)->getCardValue() == straightRes.at(1)) {
-                int suit = flushRes.at(0), matches = flushRes.at(c + 1) == suit ? 1 : 0;
-                for (int cc = c + 1; cc < 9 && matches < 5; cc++)
-                    if (cards.at(cc % numOfCards)->getCardValue() == straightRes.at(matches + 1) &&
-                        flushRes.at((cc % numOfCards) + 1) == suit)
-                        matches++;
-                if (matches == 5) {
-                    //      Base         Highest card in straight flush
-                    score = STR_FLUSH + (cards.at(c)->getCardValue() / 15.0);
-                    return score;
-                }
+        for (int seqStart = 0; seqStart < 4; seqStart++) {
+            int suit = flushRes.at(0), matches = flushRes.at(seqStart + 1) == suit ? 1 : 0;
+            for (int seqCard = seqStart + 1; seqCard < 9 && matches < 5; seqCard++)
+                if (cards.at(seqCard % numOfCards)->getCardValue() == straightRes.at(seqStart + matches + 1) &&
+                    flushRes.at((seqCard % numOfCards) + 1) == suit)
+                    matches++;
+            if (matches == 5) {
+                //      Base         Highest card in straight flush
+                score = STR_FLUSH + (cards.at(seqStart)->getCardValue() / 20.0);
+                return score;
             }
+        }
 
     valScore = valComboCheck(cards);
 
     if (flushRes.at(0) != -1) { // Flush
         score = FLUSH; // Base score
         int suit = flushRes.at(0), matches = 0;
-        for (unsigned long c = 0; c < numOfCards; c++) // All cards in flush
+        for (int c = 0; c < numOfCards; c++) // All cards in flush
             if (cards.at(c)->getSuit() == suit)
-                score += cards.at(c)->getCardValue() / (15.0 * pow(10, matches++));
+                score += cards.at(c)->getCardValue() / (20.0 * pow(10, matches++));
     } else if (straightRes.at(0) == 1) // Straight
         //       Base    Highest card in straight
-        score = STRT + (straightRes.at(1) / 15.0);
+        score = STRT + (straightRes.at(1) / 20.0);
     else if (valScore == 0) // High card, base score of 0
-        for (unsigned long c = 0; c < numOfCards; c++) // Copy over all cards, for comparison
-            score += cards.at(c)->getCardValue() / (15.0 * pow(10, c));
+        for (int c = 0; c < numOfCards; c++) // Copy over all cards, for comparison
+            score += cards.at(c)->getCardValue() / (20.0 * pow(10, c));
 
     return score > valScore ? score : valScore;
 }
@@ -96,17 +94,16 @@ double Hand::valComboCheck(std::vector<Card *> cards) {
     std::vector<int> coi(2, 0);
 
     // Runs through all values and determines which card combinations will give the best hands.
-    for (int c = 2; c < 15; c++) {
-        for (int cois = 0; cois < 2; cois++) {
+    for (int c = 2; c < 15; c++)
+        for (int cois = 0; cois < 2; cois++)
             if (vals.at(c) >= vals.at(coi.at(cois))) {
                 if (cois == 0) {
                     coi.at(1) = coi.at(0);
                     coi.at(0) = c;
-                } else if (c < coi.at(1))
+                    break;
+                } else if (c > coi.at(1))
                     coi.at(1) = c;
             }
-        }
-    }
 
     std::vector<int> kickers(3, 0);
 
@@ -119,59 +116,61 @@ double Hand::valComboCheck(std::vector<Card *> cards) {
 
     if (vals.at(coi.at(0)) == 2 && vals.at(coi.at(1)) != 2) { // Pair
         //       Base    Card in pair
-        score += PAIR + (coi.at(0) / 15.0);
+        score += PAIR + (coi.at(0) / 20.0);
         for (int k = 0; k < 3; k++) // Kickers
-            score += kickers.at(k) / (150.0 * pow(10, k));
+            score += kickers.at(k) / (200.0 * pow(10, k));
     } else if (vals.at(coi.at(0)) == 2 && vals.at(coi.at(1)) == 2) { // Two pair
         //       Base        Card in high pair    Card in low pair
-        score += TWO_PAIR + (coi.at(0) / 15.0) + (coi.at(1) / 150.0);
+        score += TWO_PAIR + (coi.at(0) / 20.0) + (coi.at(1) / 200.0);
         for (int k = 0; k < 2; k++) // Kickers
             score += kickers.at(k) / (1500.0 * pow(10, k));
     } else if (vals.at(coi.at(0)) == 3 && vals.at(coi.at(1)) != 2) { // Three of a kind
         //       Base         Card in three of a kind
-        score += THREE_OAK + (coi.at(0) / 15.0);
+        score += THREE_OAK + (coi.at(0) / 20.0);
         for (int k = 0; k < 2; k++) // Kickers
-            score += kickers.at(k) / (150.0 * pow(10, k));
+            score += kickers.at(k) / (200.0 * pow(10, k));
     } else if (vals.at(coi.at(0)) == 3 && vals.at(coi.at(1)) == 2) { // Full house
         //       Base  Card in three OAK    Card in pair
-        score += FH + (coi.at(0) / 15.0) + (coi.at(1) / 150.0);
+        score += FH + (coi.at(0) / 20.0) + (coi.at(1) / 200.0);
     } else if (vals.at(coi.at(0)) == 4) { // Four of a kind
         //       Base        Cards in four of a kind   Kicker
-        score += FOUR_OAK + (coi.at(0) / 15.0) + (kickers.at(1) / 150.0);
+        score += FOUR_OAK + (coi.at(0) / 20.0) + (kickers.at(1) / 200.0);
     }
 
     return score;
 }
 
-void Hand::straightCheck(std::vector<Card *> cards, std::vector<int>& results) {
+void Hand::straightCheck(std::vector<Card *> cards, std::vector<int> &results) {
     if (cards.size() < 5)
         return;
 
-    int seq = 0; // Length of potential sequence
-    for (int v = 1; v < cards.size(); v++) {
+    int seq = 0, v; // Length of potential sequence
+    for (v = 1; v < cards.size(); v++) {
         if (cards.at(v - 1)->getCardValue() - cards.at(v)->getCardValue() == 1)
-            seq++;
-        else if (cards.at(v - 1)->getCardValue() - cards.at(v)->getCardValue() != 0)
-            seq = 0;
+            results.at(seq++ + 1) = cards.at(v - 1)->getCardValue();
+        else if (cards.at(v - 1)->getCardValue() - cards.at(v)->getCardValue() != 0) {
+            if (seq > 3)
+                break;
+            else
+                seq = 0;
+        }
         // Special ace check as 1
         if (v == cards.size() - 1 && cards.at(0)->getCardValue() == 14 &&
-            cards.at(cards.size() - 1)->getCardValue() - 1 == 1) {
-            seq++;
-            v++;
+            cards.at(cards.size() - 1)->getCardValue() - 1 == 1 && seq >= 3) {
+            results.at(seq++ + 1) = cards.at(cards.size() - 1)->getCardValue();
+            results.at(seq + 1) = 14;
+            results.at(0) = 1;
+            return;
         }
-        if (seq > 3) { // 1-2-3-4-5 (only 4 '-', so if 4 exist then a sequence must exist)
-            results.at(0) = 1; // Set straight found to true
-            int pos = 1;
-            // Record straight (and wrap around in case ace exists, which has val of 14)
-            for (int c = (v + 2) % cards.size(); c <= v && pos < 6; c++)
-                if (results.at(pos - 1) != cards.at(c % cards.size())->getCardValue())
-                    results.at(pos++) = cards.at(c % cards.size())->getCardValue();
-            break;
-        }
+    }
+
+    if (seq > 3) { // 1-2-3-4-5 (only 4 '-', so if 4 exist then a sequence must exist)
+        results.at(0) = 1; // Set straight found to true
+        results.at(seq + 1) = cards.at(v - 1)->getCardValue();
     }
 }
 
-void Hand::flushCheck(std::vector<Card *> cards, std::vector<int>& results) {
+void Hand::flushCheck(std::vector<Card *> cards, std::vector<int> &results) {
     if (cards.size() < 5)
         return;
 
