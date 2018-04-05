@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../../headers/test/HandTest.h"
 #include "../../headers/holdem/Hand.h"
+#include "../../headers/holdem/Deck.h"
 
 void HandTest::test() {
     testStraightFlush();
@@ -16,17 +17,26 @@ void HandTest::test() {
 
 void HandTest::testStraightFlush() {
     for (int s = 0; s < 4; s++)
-        for (int c = 5; c < 14; c++) {
-            Card c1((Suit) s, (c + 9) % 15), c2((Suit) s, c - 3);
-            Hand hand(&c1, &c2);
-            std::vector<Card*> commCards(3);
-            for (int h = 0; h < 3; h++)
-                commCards.at(h) = new Card((Suit) s, c - h);
+        for (int extraCards = 1; extraCards < 2; extraCards++) {
+            Deck d;
+            for (int c = 5; c < 14; c++) {
+                Card c1((Suit) s, (c + 7) % 13 + 2), c2((Suit) s, c - 3);
+                Hand hand(&c1, &c2);
+                std::vector<Card *> commCards(3 + extraCards);
+                for (int h = 0; h < 3; h++)
+                    commCards.at(h) = new Card((Suit) s, c - h);
 
-            double score = hand.getHandScore(commCards);
-            if (score <= STR_FLUSH || score > STR_FLUSH + 1) {
-                testFail("Straight flush", hand.pocket, commCards);
-                return;
+                for (int ec = 0; ec < extraCards; ec++) {
+                    Card* c;
+                    while ((c = d.deal())->getSuit() == s);
+                    commCards.at(3 + ec) = c;
+                }
+
+                double score = hand.getHandScore(commCards);
+                if (score <= STR_FLUSH || score > STR_FLUSH + 1) {
+                    testFail("Straight flush", hand.pocket, commCards);
+                    return;
+                }
             }
         }
 }
@@ -96,5 +106,6 @@ void HandTest::testHighCard() {
 void HandTest::testFail(std::string testName, std::vector<Card*> pocket, std::vector<Card*> commCards) {
     std::cout << "Hand -> " << testName << " test failed... Cards: ";
     commCards.insert(commCards.end(), pocket.begin(), pocket.end());
+    Hand::quicksortByVal(commCards, 0, commCards.size() - 1);
     Hand::displayHand(commCards);
 }

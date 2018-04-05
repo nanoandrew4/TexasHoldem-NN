@@ -48,7 +48,7 @@ public:
      * @param lPiv Left-most point to sort array from
      * @oaram rPiv Right-most point to sort array from
      */
-    static void quicksortByVal(std::vector<Card *> cards, int lPiv, int rPiv);
+    static void quicksortByVal(std::vector<Card *>& cards, int lPiv, int rPiv);
 
 private:
     /**
@@ -66,7 +66,7 @@ private:
      * @param cards Vector of card pointers to evaluate
      * @param results Integer vector of size 6, where the results of this check are written to
      */
-    void straightCheck(std::vector<Card *> cards, std::vector<int> results);
+    void straightCheck(std::vector<Card *> cards, std::vector<int>& results);
 
     /**
      * Determines if a vector of Card pointers has a flush. If it does, it writes 9 numbers to the 'results'
@@ -76,7 +76,7 @@ private:
      * @param cards Vector of Card pointers to check for flush
      * @param results Integer vector of size 9, where the results of this check are written to
      */
-    void flushCheck(std::vector<Card *> cards, std::vector<int> results);
+    void flushCheck(std::vector<Card *> cards, std::vector<int>& results);
 };
 
 #endif //TEXAS_HOLDEM_NN_HAND_H

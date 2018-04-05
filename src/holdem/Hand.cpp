@@ -42,7 +42,7 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
     std::vector<Card *> cards;
     cards.insert(cards.end(), pocket.begin(), pocket.end());
     cards.insert(cards.end(), communityCards.begin(), communityCards.end());
-    quicksortByVal(cards, 0, numOfCards - 1);
+    quicksortByVal(cards, 0, cards.size() - 1);
 
     std::vector<int> straightRes(6, 0);
     straightCheck(cards, straightRes);
@@ -51,15 +51,16 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
     flushCheck(cards, flushRes);
 
     if (straightRes.at(0) == 1 && flushRes.at(0) != -1) // Verify straight flush (and royal flush)
-        for (unsigned long c = 0; c < 4; c++)
+
+        for (int c = 0; c < 4; c++)
             if (cards.at(c)->getCardValue() == straightRes.at(1)) {
                 int suit = flushRes.at(0), matches = flushRes.at(c + 1) == suit ? 1 : 0;
-                for (unsigned long cc = c + 1; cc < 9 && matches < 5; cc++)
+                for (int cc = c + 1; cc < 9 && matches < 5; cc++)
                     if (cards.at(cc % numOfCards)->getCardValue() == straightRes.at(matches + 1) &&
                         flushRes.at((cc % numOfCards) + 1) == suit)
                         matches++;
                 if (matches == 5) {
-                    //       Base         Highest card in straight flush
+                    //      Base         Highest card in straight flush
                     score = STR_FLUSH + (cards.at(c)->getCardValue() / 15.0);
                     return score;
                 }
@@ -142,7 +143,7 @@ double Hand::valComboCheck(std::vector<Card *> cards) {
     return score;
 }
 
-void Hand::straightCheck(std::vector<Card *> cards, std::vector<int> results) {
+void Hand::straightCheck(std::vector<Card *> cards, std::vector<int>& results) {
     if (cards.size() < 5)
         return;
 
@@ -153,7 +154,8 @@ void Hand::straightCheck(std::vector<Card *> cards, std::vector<int> results) {
         else if (cards.at(v - 1)->getCardValue() - cards.at(v)->getCardValue() != 0)
             seq = 0;
         // Special ace check as 1
-        if (v == 6 && cards.at(0)->getCardValue() == 14 && cards.at(6)->getCardValue() - 1 == 1) {
+        if (v == cards.size() - 1 && cards.at(0)->getCardValue() == 14 &&
+            cards.at(cards.size() - 1)->getCardValue() - 1 == 1) {
             seq++;
             v++;
         }
@@ -169,7 +171,7 @@ void Hand::straightCheck(std::vector<Card *> cards, std::vector<int> results) {
     }
 }
 
-void Hand::flushCheck(std::vector<Card *> cards, std::vector<int> results) {
+void Hand::flushCheck(std::vector<Card *> cards, std::vector<int>& results) {
     if (cards.size() < 5)
         return;
 
@@ -190,7 +192,7 @@ void Hand::flushCheck(std::vector<Card *> cards, std::vector<int> results) {
     }
 }
 
-void Hand::quicksortByVal(std::vector<Card *> cards, int lPiv, int rPiv) {
+void Hand::quicksortByVal(std::vector<Card *> &cards, int lPiv, int rPiv) {
     int pivot = cards.at(lPiv + (rPiv - lPiv) / 2)->getCardValue();
     int a = lPiv, b = rPiv;
 
