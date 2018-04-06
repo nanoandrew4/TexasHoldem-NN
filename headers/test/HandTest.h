@@ -19,6 +19,7 @@ private:
     static void testHighCard();
 
     static void testFail(std::string testName, std::vector<Card*> pocket, std::vector<Card*> commCards);
+    static void cleanCardVec(std::vector<Card*>& cards, int lim);
 };
 
 #endif //TEXAS_HOLDEM_NN_HANDTEST_H
