@@ -3,9 +3,10 @@
 
 static std::mt19937_64 mt_rand((ulong) std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
-Deck::Deck() {
+Deck::Deck(bool autoReShuffle) {
     for (int c = 0; c < 52; c++) deck.emplace_back(Card((Suit) ((c / 13)), (c % 13) + 2));
     pos = deck.size();
+    this->autoReShuffle = autoReShuffle;
     shuffle();
 }
 
@@ -48,7 +49,8 @@ void Deck::shuffle() {
 Card *Deck::deal() {
     // To prevent breaking, decks can be reused. Re-shuffle and reset pos if deck "runs out"
     if (pos == 0) {
-        shuffle();
+        if (autoReShuffle)
+            shuffle();
         pos = deck.size();
     }
 

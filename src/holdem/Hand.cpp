@@ -171,10 +171,11 @@ void Hand::straightCheck(std::vector<Card *> cards, std::vector<int> &results) {
 }
 
 void Hand::flushCheck(std::vector<Card *> cards, std::vector<int> &results) {
+    results.at(0) = -1;
+
     if (cards.size() < 5)
         return;
 
-    results.at(0) = -1;
     std::vector<int> suits(4, 0); // Holds number of appearances of each suit
 
     // Count each suit and add it to the results array

@@ -13,7 +13,7 @@ public:
     /**
      * Fills deck with the cards found in a standard deck (52 cards).
      */
-    Deck();
+    explicit Deck(bool autoReShuffle = true);
 
     /**
      * Fills deck with cards found in a standard deck, but excludes those contained
@@ -48,6 +48,8 @@ private:
 
     // Position to read card value from (allows simulating cards being drawn)
     int pos;
+
+    bool autoReShuffle;
 
     // Shuffles the deck, by randomly swapping cards.
     void shuffle();
