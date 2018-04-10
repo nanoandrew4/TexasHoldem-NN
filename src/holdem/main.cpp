@@ -7,19 +7,13 @@
 #include "../../headers/test/HandTest.h"
 
 int main() {
-
-    std::cout << "Preliminary testing..." << std::endl;
-    DeckTest::test();
-    HandTest::test();
-
-    std::cout << std::endl;
-
     do {
         std::cout << "Welcome to TexasHoldemNN - Where you can play your computer in a game of Texas Hold'em poker"
                   << std::endl;
         std::cout << "FYI, your name is now Steve. Get used to it!" << std::endl << std::endl;
         std::cout << "1. Play against AI agent" << std::endl;
         std::cout << "2. Train AI agent(s)" << std::endl;
+        std::cout << "3. Test game logic integrity" << std::endl;
         std::cout << "0. Exit" << std::endl << std::endl;
 
         int opt;
@@ -28,7 +22,9 @@ int main() {
         do {
             std::cout << ">> ";
             std::cin >> opt;
-        } while (opt < 0 || opt > 2);
+        } while (opt < 0 || opt > 3);
+
+        std::cin.clear();
 
         if (opt == 1) {
             std::cout << "Enter number of agents to play against: ";
@@ -49,13 +45,29 @@ int main() {
         } else if (opt == 2) {
             std::cout << "Enter population size, generations to evolve, number of parents, game iterations per "
                       << "generation and number of threads to be used" << std::endl;
-            NNEvolver evolver(std::cin.get(), std::cin.get(), std::cin.get(), std::cin.get(), std::cin.get());
+
+            int popSize, gensToEvolve, numOfParents, gameIters, threads;
+            std::cin >> popSize >> gensToEvolve >> numOfParents >> gameIters >> threads;
+            NNEvolver evolver(popSize, gensToEvolve, numOfParents, gameIters, threads);
+
             std::cout << "Enter filename to save agent data to: ";
             std::cin >> file;
+
             evolver.setOutFileName(file);
             evolver.evolve();
+        } else if (opt == 3) {
+            std::cout << "Enter number of times to run each test: ";
+            std::cin >> opt;
+            std::cout << "Testing..." << std::endl;
+            for (int i = 0; i < opt; i++) {
+                DeckTest::test();
+                HandTest::test();
+            }
+            std::cout << std::endl << std::endl;
         } else if (opt == 0)
             break;
+
+        std::cin.clear();
     } while (true);
 
     return 0;

@@ -1,4 +1,3 @@
-#include <iostream>
 #include "../../headers/nn/AIPlayer.h"
 #include "../../headers/holdem/Deck.h"
 
@@ -12,40 +11,45 @@ AIPlayer::AIPlayer(std::string agentFile) {
     nn = NeuralNetwork::deserialize(agentFile);
 }
 
+AIPlayer::AIPlayer(std::string agentFile, std::string agentName) {
+    nn = NeuralNetwork::deserialize(agentFile);
+    this->name = std::move(agentName);
+}
+
 AIPlayer::~AIPlayer() {
     delete nn;
 }
 
 int AIPlayer::play(std::vector<double> tableInfo) {
-    int ans = nn->getAction(tableInfo);
-    if (ans == -1)
+    int action = nn->getAction(tableInfo);
+    if (action == -1)
         playing = false;
-    return (ans > 1 && ans < tableInfo.at(0)) ? 1 : ans; // Deals with all in and improper raise
+    return (action > 1 && action < tableInfo.at(0)) ? 1 : action; // Deals with 'all in' and improper raise
 }
 
-double AIPlayer::getHandPotential(std::vector<Card*> communityCards) { // TODO: NEEDS TESTING
-    double score = hand->getHandScore(communityCards);
+double AIPlayer::getHandPotential(std::vector<Card *> communityCards) {
+    double currScore = hand->getHandScore(communityCards);
 
-    int numOfCards = communityCards.size() + 2;
+    int numOfCards = communityCards.size() + 2, cardsToCheck = 26;
     if (numOfCards == 7)
-        return score;
+        return currScore;
 
-    std::vector<Card*> cards(numOfCards);
+    std::vector<Card *> cards(numOfCards);
     for (int c = 0; c < 2; c++)
         cards.at(c) = hand->pocket.at(c);
-    for (int cc = 0; cc < communityCards.size(); cc++)
+    for (int cc = 0; cc < numOfCards - 2; cc++)
         cards.at(cc + 2) = communityCards.at(cc);
 
     hand->quicksortByVal(cards, 0, numOfCards - 1);
 
     Deck deck(cards);
-    cards.push_back(NULL);
+    cards.push_back(nullptr);
 
-    double newAvgScore = 0;
-    for (int c = 0; c < 26; c++) {
+    double avgPotentialScore = 0;
+    for (int c = 0; c < cardsToCheck; c++) { // Don't check all hands, or performance drops exponentially.
         cards.at(numOfCards) = deck.deal();
-        newAvgScore += (hand->getHandScore(communityCards) / (double) deck.getCardsInDeck());
+        avgPotentialScore += (hand->getHandScore(communityCards));
     }
 
-    return (newAvgScore - score);
+    return ((avgPotentialScore / (deck.getCardsInDeck() * cardsToCheck)) - currScore);
 }

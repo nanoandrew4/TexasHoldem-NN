@@ -224,7 +224,7 @@ void HandTest::testPair() {
 
             Card *card;
             for (int ec = 0; ec < extraCards; ec++) {
-                while ((card = d.deal())->getSuit() == ec % 4 || card->getCardValue() == pairVal ||
+                while ((card = d.deal())->getSuit() != ec % 4 || card->getCardValue() == pairVal ||
                        card->getCardValue() != (pairVal + 3 * ec) % 13 + 2); // Ensures no card combinations
                 commCards.at(ec) = card;
             }

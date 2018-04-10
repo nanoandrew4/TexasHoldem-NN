@@ -1,10 +1,10 @@
 #include <iostream>
 #include "../../headers/holdem/Player.h"
 
-Player::Player() {}
+Player::Player() = default;
 
 Player::Player(std::string name) {
-    this->name = name;
+    this->name = std::move(name);
 }
 
 Player::~Player() = default;
@@ -54,5 +54,5 @@ int Player::getMoney() {
 }
 
 void Player::newRound() {
-    this->playing = money > 0;
+    this->playing = (money > 0);
 }

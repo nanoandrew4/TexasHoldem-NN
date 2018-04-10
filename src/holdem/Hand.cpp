@@ -146,6 +146,7 @@ void Hand::straightCheck(std::vector<Card *> cards, std::vector<int> &results) {
 
     int seq = 0, v; // Length of potential sequence
     for (v = 1; v < cards.size(); v++) {
+        // Checks if ordered cards descend in steps of 1 (or don't descend, that's fine)
         if (cards.at(v - 1)->getCardValue() - cards.at(v)->getCardValue() == 1)
             results.at(seq++ + 1) = cards.at(v - 1)->getCardValue();
         else if (cards.at(v - 1)->getCardValue() - cards.at(v)->getCardValue() != 0) {

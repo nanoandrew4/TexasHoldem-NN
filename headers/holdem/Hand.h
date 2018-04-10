@@ -46,7 +46,7 @@ public:
      *
      * @param cards Vector of Card pointers
      * @param lPiv Left-most point to sort array from
-     * @oaram rPiv Right-most point to sort array from
+     * @param rPiv Right-most point to sort array from
      */
     static void quicksortByVal(std::vector<Card *>& cards, int lPiv, int rPiv);
 
