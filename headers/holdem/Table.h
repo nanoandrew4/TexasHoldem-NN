@@ -7,7 +7,8 @@
 
 class Table {
 public:
-    Table(std::vector<Player*> players);
+    explicit Table(std::vector<Player *> players);
+
     ~Table();
 
     /**
@@ -15,6 +16,8 @@ public:
      * once.
      */
     void play();
+
+    static bool output;
 private:
 
     /**
@@ -27,6 +30,35 @@ private:
     void playRound(int startPlayer, int lastRaise = 0);
 
     /**
+     * Splits pot amongst winning players, if applicable. Executed once all betting has finished, and if a tie happened.
+     */
+    void splitPot();
+
+    /**
+     * Makes the initial antes for small blind and big blind, if they exist.
+     *
+     * @param bigBlindSet True if the big blind exists, false otherwise
+     * @return Initial quantity required for players to play their hands in the pre-flop
+     */
+    int initAntes(bool bigBlindSet);
+
+    /**
+     * Sets the dealer, small blind and big blind roles to different players, depending on the round number.
+     *
+     * @param round Round number that is about to be played
+     * @return Number of blinds in the game (1 if only small blind, 2 if small and big blind)
+     */
+    int assignSpecialRoles(int round);
+
+    /**
+     * Resets the table to allow for a new round to be played.
+     *
+     * @param cards Vector of Card* type, where the cards to be played are dealt, and assigned to the various players
+     * @return True if a new round can be played, false if all but one players are out of money
+     */
+    bool newRound(std::vector<Card *>& cards);
+
+    /**
      * Writes information about the table the players are seated at to the array passed. This information is used
      * by human players to determine the cost to call a raise made, and by agents in order to determine the best next
      * move.
@@ -34,16 +66,16 @@ private:
      * @param tableInfo Array of size (4 + ActivePlayers - 1) where the table information is written to
      * @param currPlayer Player collecting information on the table
      */
-    void getTableInfo(std::vector<double> tableInfo, Player* currPlayer);
+    void getTableInfo(std::vector<double> tableInfo, Player *currPlayer);
 
     // Face up cards on the table
-    std::vector<Card*> communityCards;
+    std::vector<Card *> communityCards;
 
     // Various entities that take special actions during the start of each round
-    std::vector<Player*> players;
-    Player* dealer;
-    Player* smallBlind;
-    Player* bigBlind;
+    std::vector<Player *> players;
+    Player *dealer;
+    Player *smallBlind;
+    Player *bigBlind;
 
     int numOfPlayers;
     int activePlayers;
@@ -57,7 +89,8 @@ private:
     int pot = 0; // Money on the table
     int lastRaise = 0; // Last amount raised
     int lastPlayerRaised = 0; // Last player who raised
-};
 
+    Deck deck;
+};
 
 #endif //TEXAS_HOLDEM_NN_TABLE_H
