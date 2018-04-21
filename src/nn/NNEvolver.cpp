@@ -30,8 +30,9 @@ void NNEvolver::evolve() {
     long start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
     for (; currGen < gensToEvolve; currGen++) {
         train(players);
-        std::cout << "Finished training gen: " << (currGen + 1) << std::endl;
+        std::cout << "\rFinished training gen: " << (currGen + 1) << std::flush;
     }
+    std::cout << std::endl;
 
     outputFormattedTime(std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000 - start);
 
@@ -47,12 +48,11 @@ void NNEvolver::train(std::vector<AIPlayer *> players) {
             break;
         }
 
-    int popPerThread = (int) ((float) (population) / this->threads + 0.5);
+    int popPerThread = population / this->threads + 1;
 
     for (int g = 0; g < itersPerGen; g++) {
         std::vector<std::thread> threads(this->threads);
         int thread = 0;
-
         for (int startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
             threads.at(thread) = std::thread(&NNEvolver::trainThread, this, players, playersPerTable, thread,
                                              startPopPos == 0 ? 0 : startPopPos + playersPerTable,
