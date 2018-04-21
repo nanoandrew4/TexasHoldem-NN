@@ -54,7 +54,7 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
         for (int seqStart = 0; seqStart < 4; seqStart++) {
             int suit = flushRes.at(0), matches = flushRes.at(seqStart + 1) == suit ? 1 : 0;
             for (int seqCard = seqStart + 1; seqCard < 9 && matches < 5; seqCard++)
-                if (cards.at(seqCard % numOfCards)->getCardValue() == straightRes.at(seqStart + matches + 1) &&
+                if (cards.at(seqCard % numOfCards)->getCardValue() == straightRes.at((seqStart + matches) % numOfCards + 1) &&
                     flushRes.at((seqCard % numOfCards) + 1) == suit)
                     matches++;
             if (matches == 5) {

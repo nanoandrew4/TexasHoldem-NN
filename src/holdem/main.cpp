@@ -41,7 +41,9 @@ int main() {
             }
 
             Table table(players);
+            Table::output = true;
             table.play();
+            Table::output = false;
         } else if (opt == 2) {
             std::cout << "Enter population size, generations to evolve, number of parents, game iterations per "
                       << "generation and number of threads to be used" << std::endl;

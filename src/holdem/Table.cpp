@@ -5,7 +5,7 @@
 bool Table::output = false;
 
 Table::Table(std::vector<Player *> players) {
-    if (numOfPlayers < 2) {
+    if (players.size() < 2) {
         std::cout << "Table must have at least 2 players" << std::endl;
         return;
     }
@@ -13,7 +13,7 @@ Table::Table(std::vector<Player *> players) {
     this->numOfPlayers = this->players.size();
 }
 
-Table::~Table() = default;;
+Table::~Table() = default;
 
 void Table::play() {
     for (int dealer = 0; dealer < numOfPlayers; dealer++) {
@@ -67,146 +67,7 @@ void Table::play() {
     }
 }
 
-void Table::splitPot() {
-    double bestHand = 0;
-    int winners = activePlayers;
-
-    // Compare hands
-    std::vector<int> bestHands(numOfPlayers);
-    for (int p = 0; p < numOfPlayers; p++) {
-        if (players.at(p)->isPlaying()) {
-            players.at(p)->hand->getHandScore(communityCards);
-            if (bestHands.at(p) < bestHand)
-                bestHand = bestHands.at(1);
-        }
-    }
-
-    // Erase all players with hands worse than the best type from the pool of potential victors
-    for (ulong ap = 0; ap < bestHands.size(); ap++) {
-        if (bestHands.at(1) > bestHand) {
-            bestHands.at(ap) = 0;
-            winners--;
-        }
-    }
-
-    // If players have same hand type, compare values to determine winner
-    for (ulong h = 0; h < bestHands.size() - 1; h++) {
-        if (bestHands.at(h) > bestHands.at(h + 1)) {
-            bestHands.at(h + 1) = 0;
-            winners--;
-        } else if (bestHands.at(h) < bestHands.at(h + 1)) {
-            bestHands.at(h) = 0;
-            winners--;
-        }
-    }
-
-    // Split pot amongst winners (if more than one player has the winning hand)
-    for (int wp = 0; wp < bestHands.size(); wp++) {
-        if (bestHands.at(wp) != 0) {
-            players.at(wp)->collectWinnings(pot / winners);
-            if (output)
-                std::cout << players.at(wp)->getName() << " won" << std::endl << std::endl;
-        }
-    }
-}
-
-
-void Table::playRound(int startPlayer, int initRaise) {
-    lastRaise = initRaise;
-
-    // If pre-flop, big blind has already payed in, so do not go to him (essentially go to startPlayer - 1)
-    lastPlayerRaised = initRaise == 0 ? startPlayer : lastPlayerRaised;
-
-    if (output)
-        std::cout << "Starting betting\n\n";
-
-    int p, opt = -2;
-    for (p = startPlayer; p != lastPlayerRaised || opt == -2; p = (p + 1) % numOfPlayers) {
-        if (players.at(p)->isPlaying()) {
-            std::vector<double> tableInfo(activePlayers - 1 + 4);
-            getTableInfo(tableInfo, players.at(p)); // Table info to pass to player
-            opt = players.at(p)->play(tableInfo);
-            if (opt == -1) { // Fold
-                activePlayers--;
-                if (activePlayers == 1)
-                    return;
-            } else if (opt > lastRaise) { // Raise
-                lastRaise = opt;
-                lastPlayerRaised = p;
-            }
-        }
-    }
-
-    for (p = 0; p < numOfPlayers; p++)
-        if (players.at(p)->isPlaying() && (initRaise != 0 ? players.at(p) != bigBlind : true)) {
-            int ante = (players.at(p)->getMoney() > lastRaise ? lastRaise : players.at(
-                    p)->getMoney()); // Allows for all-in
-            players.at(p)->anteUp(ante);
-            pot += ante;
-        }
-}
-
-void Table::getTableInfo(std::vector<double> tableInfo, Player *currPlayer) {
-    tableInfo.at(0) = lastRaise;
-    tableInfo.at(1) = pot;
-    tableInfo.at(2) = activePlayers - 1; // Alternatively use numOfPlayers
-    tableInfo.at(3) = currPlayer->getHandPotential(communityCards); // To be filled in by AIPlayer
-    int opp = 0;
-    for (int p = 0; opp != activePlayers - 1; p++)
-        if (players.at(p)->isPlaying() && players.at(p) != currPlayer)
-            tableInfo.at(opp++ + 4) = players.at(p)->getMoney();
-}
-
-int Table::initAntes(bool bigBlindSet) {
-    // Small blind ante before round starts (lost to time... Might need fixing)
-    int initBet = SB;
-    if (smallBlind->getMoney() < SB)
-        initBet = SB - smallBlind->getMoney();
-    smallBlind->anteUp(initBet);
-    pot += initBet;
-
-    if (bigBlindSet) { // Big blind ante before round starts, if enough players to set big blind
-        initBet = BB;
-        if (bigBlind->getMoney() < BB)
-            initBet = BB - smallBlind->getMoney();
-        bigBlind->anteUp(initBet);
-        pot += initBet;
-    }
-
-    return initBet;
-}
-
-int Table::assignSpecialRoles(int round) {
-    dealer = players.at(round);
-    if (output)
-        std::cout << "Dealer: " << dealer->getName() << std::endl;
-    int blinds = 0;
-    for (int p = 1; p < numOfPlayers; p++) {
-        if (players.at((round + p) % numOfPlayers)->isPlaying()) {
-            if (blinds == 0) {
-                lastPlayerRaised = (round + p) % numOfPlayers;
-                smallBlind = players.at(lastPlayerRaised);
-                blinds++;
-
-                if (activePlayers == 2)
-                    break;
-                if (output)
-                    std::cout << "Small Blind: " << smallBlind->getName() << std::endl;
-            } else {
-                lastPlayerRaised = (round + p) % numOfPlayers;
-                bigBlind = players.at(lastPlayerRaised);
-                blinds++;
-                if (output)
-                    std::cout << "Big Blind: " << bigBlind->getName() << std::endl;
-                break;
-            }
-        }
-    }
-
-    return blinds;
-}
-
-bool Table::newRound(std::vector<Card *>& cards) {
+bool Table::newRound(std::vector<Card *> &cards) {
     activePlayers = numOfPlayers;
     // Count how many players are able to play the next round
     for (int p = 0; p < numOfPlayers; p++) {
@@ -228,4 +89,132 @@ bool Table::newRound(std::vector<Card *>& cards) {
         players.at(p)->hand = new Hand(cards.at(p), cards.at(p + numOfPlayers));
 
     return true;
+}
+
+int Table::assignSpecialRoles(int round) {
+    dealer = players.at(round);
+    if (output)
+        std::cout << "Dealer: " << dealer->getName() << std::endl;
+    int blinds = 0;
+    for (int p = 1; p < numOfPlayers; p++)
+        if (players.at((round + p) % numOfPlayers)->isPlaying()) {
+            if (blinds == 0) {
+                lastPlayerRaised = (round + p) % numOfPlayers;
+                smallBlind = players.at(lastPlayerRaised);
+                blinds++;
+
+                if (activePlayers == 2)
+                    break;
+                if (output)
+                    std::cout << "Small Blind: " << smallBlind->getName() << std::endl;
+            } else {
+                lastPlayerRaised = (round + p) % numOfPlayers;
+                bigBlind = players.at(lastPlayerRaised);
+                blinds++;
+
+                if (output)
+                    std::cout << "Big Blind: " << bigBlind->getName() << std::endl;
+                break;
+            }
+        }
+
+    return blinds;
+}
+
+int Table::initAntes(bool bigBlindSet) {
+    // Small blind ante before round starts (lost to time... Might need fixing)
+    int initBet = SB;
+    if (smallBlind->getMoney() < SB)
+        initBet = SB - smallBlind->getMoney();
+    smallBlind->anteUp(initBet);
+    pot += initBet;
+
+    if (bigBlindSet) { // Big blind ante before round starts, if enough players to set big blind
+        initBet = BB;
+        if (bigBlind->getMoney() < BB)
+            initBet = BB - smallBlind->getMoney();
+        bigBlind->anteUp(initBet);
+        pot += initBet;
+    }
+
+    return initBet;
+}
+
+void Table::playRound(int startPlayer, int initRaise) {
+    lastRaise = initRaise;
+
+    // If pre-flop, big blind has already payed in, so do not go to him (essentially go to startPlayer - 1)
+    lastPlayerRaised = initRaise == 0 ? startPlayer : lastPlayerRaised;
+
+    if (output)
+        std::cout << "Starting betting\n\n";
+
+    int p, opt = -2;
+    for (p = startPlayer; p != lastPlayerRaised || opt == -2; p = (p + 1) % numOfPlayers) {
+        if (players.at(p)->isPlaying()) {
+            std::vector<double> tableInfo(activePlayers - 1 + 4);
+            getTableInfo(tableInfo, players.at(p)); // Table info to pass to player
+
+            opt = players.at(p)->play(tableInfo);
+            if (opt == -1) { // Fold
+                activePlayers--;
+                if (activePlayers == 1)
+                    return;
+            } else if (opt > lastRaise) { // Raise
+                lastRaise = opt;
+                lastPlayerRaised = p;
+            }
+        }
+    }
+
+    for (p = 0; p < numOfPlayers; p++)
+        if (players.at(p)->isPlaying() && (initRaise != 0 ? players.at(p) != bigBlind : true)) {
+            int ante = (players.at(p)->getMoney() > lastRaise ? lastRaise : players.at(
+                    p)->getMoney()); // Allows for all-in
+            players.at(p)->anteUp(ante);
+            pot += ante;
+        }
+}
+
+void Table::splitPot() {
+    double bestHand = 0;
+    int winners = activePlayers;
+
+    // Compare hands
+    std::vector<int> bestHands(numOfPlayers);
+    for (int p = 0; p < numOfPlayers; p++) {
+        if (players.at(p)->isPlaying()) {
+            players.at(p)->hand->getHandScore(communityCards);
+            if (bestHands.at(p) < bestHand)
+                bestHand = bestHands.at(1);
+        }
+    }
+
+    // Erase all players with hands worse than the best type from the pool of potential victors
+    for (ulong ap = 0; ap < bestHands.size(); ap++) {
+        if (bestHands.at(1) > bestHand) {
+            bestHands.at(ap) = 0.0;
+            winners--;
+        }
+    }
+
+    // Split pot amongst winners (if more than one player has the winning hand)
+    for (int wp = 0; wp < bestHands.size(); wp++) {
+        if (bestHands.at(wp) != 0.0) {
+            players.at(wp)->collectWinnings(pot / winners);
+            if (output)
+                std::cout << players.at(wp)->getName() << " won" << std::endl << std::endl;
+        }
+    }
+}
+
+void Table::getTableInfo(std::vector<double> tableInfo, Player *currPlayer) {
+    tableInfo.at(0) = lastRaise;
+    tableInfo.at(1) = pot;
+    tableInfo.at(2) = activePlayers - 1; // Alternatively use numOfPlayers
+    tableInfo.at(3) = currPlayer->getHandPotential(communityCards); // To be filled in by AIPlayer
+    int opp = 0;
+    for (int p = 0; opp != activePlayers - 1; p++)
+        if (players.at(p)->isPlaying() && players.at(p) != currPlayer)
+            tableInfo.at(opp++ + 4) = players.at(p)->getMoney();
 }

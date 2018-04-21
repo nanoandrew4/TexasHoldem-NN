@@ -17,6 +17,7 @@ public:
      */
     void play();
 
+    // Controls whether game info and updates are printed to the console
     static bool output;
 private:
 
@@ -30,17 +31,12 @@ private:
     void playRound(int startPlayer, int lastRaise = 0);
 
     /**
-     * Splits pot amongst winning players, if applicable. Executed once all betting has finished, and if a tie happened.
-     */
-    void splitPot();
-
-    /**
-     * Makes the initial antes for small blind and big blind, if they exist.
+     * Resets the table to allow for a new round to be played.
      *
-     * @param bigBlindSet True if the big blind exists, false otherwise
-     * @return Initial quantity required for players to play their hands in the pre-flop
+     * @param cards Vector of Card* type, where the cards to be played are dealt, and assigned to the various players
+     * @return True if a new round can be played, false if all but one players are out of money
      */
-    int initAntes(bool bigBlindSet);
+    bool newRound(std::vector<Card *> &cards);
 
     /**
      * Sets the dealer, small blind and big blind roles to different players, depending on the round number.
@@ -51,12 +47,17 @@ private:
     int assignSpecialRoles(int round);
 
     /**
-     * Resets the table to allow for a new round to be played.
+     * Makes the initial antes for small blind and big blind, if they exist.
      *
-     * @param cards Vector of Card* type, where the cards to be played are dealt, and assigned to the various players
-     * @return True if a new round can be played, false if all but one players are out of money
+     * @param bigBlindSet True if the big blind exists, false otherwise
+     * @return Initial quantity required for players to play their hands in the pre-flop
      */
-    bool newRound(std::vector<Card *>& cards);
+    int initAntes(bool bigBlindSet);
+
+    /**
+     * Splits pot amongst winning players, if applicable. Executed once all betting has finished, and if a tie happened.
+     */
+    void splitPot();
 
     /**
      * Writes information about the table the players are seated at to the array passed. This information is used
@@ -70,6 +71,8 @@ private:
 
     // Face up cards on the table
     std::vector<Card *> communityCards;
+
+    Deck deck;
 
     // Various entities that take special actions during the start of each round
     std::vector<Player *> players;
@@ -89,8 +92,6 @@ private:
     int pot = 0; // Money on the table
     int lastRaise = 0; // Last amount raised
     int lastPlayerRaised = 0; // Last player who raised
-
-    Deck deck;
 };
 
 #endif //TEXAS_HOLDEM_NN_TABLE_H
