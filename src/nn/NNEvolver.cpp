@@ -6,21 +6,28 @@
 
 static std::mt19937_64 mt_rand((ulong) std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
-NNEvolver::NNEvolver(int pop, int gensToEvolve, int numOfParents, int itersPerGen, int threads) {
-    this->population = pop;
-    this->gensToEvolve = gensToEvolve;
-    this->numOfParents = numOfParents;
-    this->itersPerGen = itersPerGen;
-    this->threads = threads;
+NNEvolver::NNEvolver() {
+    std::cout << "Enter population size, generations to train, game iterations per "
+              << "generation and number of threads to be used" << std::endl;
+    std::cin >> population >> gensToEvolve >> itersPerGen >> threads;
+    std::cout << "Enter 0 to use elitist evolution, or 1 to use pair crossover evolution" << std::endl;
+
+    int eStrat;
+    std::cin >> eStrat;
+    evolutionStrat = eStrat == 0 ? EvolutionStrat::ELISIST : EvolutionStrat::PAIR_CROSS;
+
+    if (evolutionStrat == ELISIST) {
+        std::cout << "Enter number of parents to be used in evolving each generation: ";
+        std::cin >> numOfParents;
+    }
+
+    std::cout << "Enter filename to save agent data to: ";
+    std::cin >> outFileName;
 }
 
-NNEvolver::~NNEvolver() {}
+NNEvolver::~NNEvolver() = default;
 
-void NNEvolver::setOutFileName(std::string fileName) {
-    outFileName = std::move(fileName);
-}
-
-void NNEvolver::evolve() {
+void NNEvolver::train() {
     std::vector<AIPlayer *> players;
 
     for (int p = 0; p < population; p++)
@@ -29,7 +36,7 @@ void NNEvolver::evolve() {
     std::cout << "Training" << std::endl;
     long start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
     for (; currGen < gensToEvolve; currGen++) {
-        train(players);
+        trainGen(players);
         std::cout << "\rFinished training gen: " << (currGen + 1) << std::flush;
     }
     std::cout << std::endl;
@@ -40,7 +47,7 @@ void NNEvolver::evolve() {
         delete players.at(t);
 }
 
-void NNEvolver::train(std::vector<AIPlayer *> players) {
+void NNEvolver::trainGen(std::vector<AIPlayer *> players) {
     int playersPerTable = 2;
     for (int p = 10; p > 2; p--)
         if (population % p == 0) {
@@ -54,7 +61,7 @@ void NNEvolver::train(std::vector<AIPlayer *> players) {
         std::vector<std::thread> threads(this->threads);
         int thread = 0;
         for (int startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
-            threads.at(thread) = std::thread(&NNEvolver::trainThread, this, players, playersPerTable, thread,
+            threads.at(thread) = std::thread(&NNEvolver::trainGenThread, this, players, playersPerTable, thread,
                                              startPopPos == 0 ? 0 : startPopPos + playersPerTable,
                                              startPopPos + popPerThread > population ? population : startPopPos +
                                                                                                     popPerThread);
@@ -68,20 +75,22 @@ void NNEvolver::train(std::vector<AIPlayer *> players) {
         quicksort(players, 0, players.size() - 1);
     }
 
-    std::vector<AIPlayer *> parents(numOfParents);
-    for (int p = 0; p < numOfParents; p++) {
-        parents.at(p) = players.at(p);
-        parents.at(p)->resetMoney();
-    }
+    // Genetic algorithm for evolution of population
 
-    generateNextGen(players, parents);
+    if (evolutionStrat == ELISIST) {
+        std::vector<AIPlayer *> parents(numOfParents);
+        for (int p = 0; p < numOfParents; p++) {
+            parents.at(p) = players.at(p);
+            parents.at(p)->resetMoney();
+        }
+
+        elitistCombination(players, parents);
+    } else if (evolutionStrat == PAIR_CROSS)
+        pairCrossover(players);
 }
 
-void NNEvolver::trainThread(std::vector<AIPlayer *> players, int playersPerTable, int threadNum, int startPlayer,
-                            int endPlayer) {
-//    mu.lock();
-//    std::cout << "Start table: " << startPlayer / playersPerTable << " | End table: " << endPlayer / playersPerTable << std::endl;
-//    mu.unlock();
+void NNEvolver::trainGenThread(std::vector<AIPlayer *> players, int playersPerTable, int threadNum, int startPlayer,
+                               int endPlayer) {
     for (int t = startPlayer / playersPerTable; t < endPlayer / playersPerTable; t++) {
         std::vector<Player *> tablePlayers(playersPerTable);
         for (int p = 0; p < playersPerTable; p++)
@@ -91,7 +100,7 @@ void NNEvolver::trainThread(std::vector<AIPlayer *> players, int playersPerTable
     }
 }
 
-void NNEvolver::generateNextGen(std::vector<AIPlayer *> players, std::vector<AIPlayer *> parents) {
+void NNEvolver::elitistCombination(std::vector<AIPlayer *> players, std::vector<AIPlayer *> parents) {
     NeuralNetwork *evolvedNN = players.at(0)->getNN()->cloneNetworkStructure(false);
 
     int layers = parents.at(0)->getNN()->neuronsPerLayer.size();
@@ -122,6 +131,30 @@ void NNEvolver::generateNextGen(std::vector<AIPlayer *> players, std::vector<AIP
     }
 
     delete evolvedNN;
+}
+
+void NNEvolver::pairCrossover(std::vector<AIPlayer *> players) {
+    std::vector<int> neuronsPerLayer = players.at(0)->getNN()->neuronsPerLayer;
+    for (int pop = 0; pop < population - 1; pop += 2) {
+        for (int layer = 0; layer < neuronsPerLayer.size() - 1; layer++) {
+            int neuronsInLayer = neuronsPerLayer.at(layer);
+            for (int neuron = 0; neuron < neuronsInLayer; neuron++) {
+                int neuronsInNextLayer = neuronsPerLayer.at(layer + 1);
+                for (int nextLayerNeuron = 0; nextLayerNeuron < neuronsInNextLayer; nextLayerNeuron+=2) {
+                    double connSwapNetwork1 = players.at(pop)->getNN()->getWeightaAt(layer, neuron, nextLayerNeuron);
+                    double connSwapNetwork2 = players.at(pop + 1)-> getNN()->getWeightaAt(layer, neuron, nextLayerNeuron);
+                    if (mt_rand() % 100 < 2) // 2% chance of mutation
+                        connSwapNetwork1 += ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
+                    if (mt_rand() % 100 < 2) // 2% chance of mutation
+                        connSwapNetwork2 += ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
+                    if (mt_rand() % 10 < 6) { // 60% chance of crossover
+                        players.at(pop)->getNN()->setWeightAt(layer, neuron, nextLayerNeuron, connSwapNetwork2);
+                        players.at(pop + 1)->getNN()->setWeightAt(layer, neuron ,nextLayerNeuron, connSwapNetwork1);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void NNEvolver::quicksort(std::vector<AIPlayer *> players, int lPiv, int rPiv) {

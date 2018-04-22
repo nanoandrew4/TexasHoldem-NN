@@ -5,31 +5,28 @@
 #include "AIPlayer.h"
 #include <mutex>
 
+enum EvolutionStrat {
+    PAIR_CROSS, ELISIST
+};
+
 class NNEvolver {
 public:
-    NNEvolver(int pop, int gensToEvolve, int numOfParents, int itersPerGen, int threads);
+    NNEvolver();
 
     ~NNEvolver();
 
-    void evolve();
-
-    void setOutFileName(std::string fileName);
+    void train();
 
 private:
     int population;
     int gensToEvolve;
     int currGen = 0;
-    int numOfParents;
+    int numOfParents = 0;
     int itersPerGen;
     int threads;
 
     std::string outFileName;
-
-    /**
-     * Outputs a given number in hours, minutes and seconds
-     * @param dur Duration to be displayed in hours, minutes and seconds
-     */
-    void outputFormattedTime(unsigned long dur);
+    EvolutionStrat evolutionStrat;
 
     /**
      * Takes care of initializing the worker threads to simulate a tournament, and after all threads are done,
@@ -38,7 +35,7 @@ private:
      *
      * @param players Array of AIPlayers to be trained
      */
-    void train(std::vector<AIPlayer *> players);
+    void trainGen(std::vector<AIPlayer *> players);
 
     /**
      * Training thread, simulates 'itersPerGen' tables, using players in array 'players' between 'startPlayer' index and
@@ -51,7 +48,19 @@ private:
      * @param endPlayer Index of players array this thread should end at
      */
     void
-    trainThread(std::vector<AIPlayer *> players, int playersPerTable, int threadNum, int startPlayer, int endPlayer);
+    trainGenThread(std::vector<AIPlayer *> players, int playersPerTable, int threadNum, int startPlayer, int endPlayer);
+
+    /**
+     * Combines the parent players to generate the next generation agent. All other players copy that agent and apply
+     * some random noise to it, in order to keep evolution from stagnating. The number of parents is specified when
+     * initializing a NNEvolver instance, and they represent the best scoring players of the population.
+     *
+     * @param players Array containing all agents
+     * @param parents Array containing agents to be combined for the next generation
+     */
+    void elitistCombination(std::vector<AIPlayer *> players, std::vector<AIPlayer *> parents);
+
+    void pairCrossover(std::vector<AIPlayer *> players);
 
     /**
      * Sorts array of agents in descending order, based on how much money they have
@@ -59,13 +68,10 @@ private:
     void quicksort(std::vector<AIPlayer *>, int, int);
 
     /**
-     * Combines the parent players to generate the next generation agent. All other players copy that agent and apply
-     * some random noise to it, in order to keep evolution from stagnating.
-     *
-     * @param players Array containing all agents
-     * @param parents Array containing agents to be combined for the next generation
+     * Outputs a given number in hours, minutes and seconds
+     * @param dur Duration to be displayed in hours, minutes and seconds
      */
-    void generateNextGen(std::vector<AIPlayer *> players, std::vector<AIPlayer *> parents);
+    void outputFormattedTime(unsigned long dur);
 };
 
 #endif //TEXAS_HOLDEM_NN_NNEVOLVER_H

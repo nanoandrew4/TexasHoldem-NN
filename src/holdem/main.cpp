@@ -37,7 +37,7 @@ int main() {
 
             for (int i = 0; i < opt; i++) {
                 std::cin >> file;
-                players.push_back(new AIPlayer());
+                players.push_back(new AIPlayer(file));
             }
 
             Table table(players);
@@ -45,18 +45,8 @@ int main() {
             table.play();
             Table::output = false;
         } else if (opt == 2) {
-            std::cout << "Enter population size, generations to evolve, number of parents, game iterations per "
-                      << "generation and number of threads to be used" << std::endl;
-
-            int popSize, gensToEvolve, numOfParents, gameIters, threads;
-            std::cin >> popSize >> gensToEvolve >> numOfParents >> gameIters >> threads;
-            NNEvolver evolver(popSize, gensToEvolve, numOfParents, gameIters, threads);
-
-            std::cout << "Enter filename to save agent data to: ";
-            std::cin >> file;
-
-            evolver.setOutFileName(file);
-            evolver.evolve();
+            NNEvolver evolver;
+            evolver.train();
         } else if (opt == 3) {
             std::cout << "Enter number of times to run each test: ";
             std::cin >> opt;
