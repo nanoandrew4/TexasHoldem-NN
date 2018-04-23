@@ -50,7 +50,8 @@ int main() {
         } else if (opt == 3) {
             std::cout << "Enter number of times to run each test: ";
             std::cin >> opt;
-            std::cout << "Testing..." << std::endl;
+            std::cout << "Testing... If any anomalies occur, they will be reported. "
+                      << "If there is no output, code has passed all tests." << std::endl;
             for (int i = 0; i < opt; i++) {
                 DeckTest::test();
                 HandTest::test();

@@ -1,10 +1,9 @@
 #include <iostream>
 #include <thread>
 #include <iomanip>
+#include <sstream>
 #include "../../headers/nn/NNEvolver.h"
 #include "../../headers/holdem/Table.h"
-
-static std::mt19937_64 mt_rand((ulong) std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
 NNEvolver::NNEvolver() {
     std::cout << "Enter population size, generations to train, game iterations per "
@@ -14,34 +13,85 @@ NNEvolver::NNEvolver() {
 
     int eStrat;
     std::cin >> eStrat;
-    evolutionStrat = eStrat == 0 ? EvolutionStrat::ELISIST : EvolutionStrat::PAIR_CROSS;
-
-    if (evolutionStrat == ELISIST) {
-        std::cout << "Enter number of parents to be used in evolving each generation: ";
-        std::cin >> numOfParents;
+    switch (eStrat) {
+        case 0:
+            geneticAlgorithm = new ElitistCombination();
+            break;
+        case 1:
+            geneticAlgorithm = new PairCrossover();
+            break;
     }
-
-    std::cout << "Enter filename to save agent data to: ";
-    std::cin >> outFileName;
+    geneticAlgorithm->setEvolutionVars();
 }
 
-NNEvolver::~NNEvolver() = default;
+NNEvolver::~NNEvolver() {
+    delete geneticAlgorithm;
+}
+
+void NNEvolver::displayEvolverInfo() {
+    std::cout << std::endl;
+    std::cout << "------------------------------------------------" << std::endl;
+    std::cout << "Evolution type: " << geneticAlgorithm->getAlgorithmType() << std::endl;
+    std::cout << "Population: " << population << std::endl;
+    std::cout << "Target generations to evolve: " << gensToEvolve << std::endl;
+    std::cout << "Full table rotations per generation: " << itersPerGen << std::endl;
+    std::cout << "Threads used: " << threads << std::endl << std::endl;
+
+    std::cout << "~Evolution type specific options~" << std::endl;
+    geneticAlgorithm->displayEvolutionVars();
+
+    std::cout << std::endl;
+}
+
+void NNEvolver::writeToFile(NeuralNetwork *nn) {
+    std::ostringstream oss;
+    oss << "nn_" << geneticAlgorithm->getAlgoDescriptor() + "_" << shortenInt(population) << "-pop_"
+        << shortenInt(gensToEvolve) << "-gens_" << shortenInt(itersPerGen) << "-iters"
+        << geneticAlgorithm->getVarsDescriptor() << ".dat";
+
+    nn->serialize(oss.str());
+    std::cout << std::endl << "Best agent saved under file: " << oss.str() << std::endl;
+}
+
+std::string NNEvolver::shortenInt(int intToShorten) {
+    std::ostringstream oss;
+    if (intToShorten / 1000000 > 0)
+        oss << intToShorten / 1000000 << "M";
+    else if (intToShorten / 1000 > 0)
+        oss << intToShorten / 1000 << "k";
+    else
+        oss << intToShorten;
+    return oss.str();
+}
 
 void NNEvolver::train() {
     std::vector<AIPlayer *> players;
-
     for (int p = 0; p < population; p++)
         players.push_back(new AIPlayer());
 
-    std::cout << "Training" << std::endl;
-    long start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
+    displayEvolverInfo();
+    long startWallTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
+    clock_t startCPUTime = clock();
+
     for (; currGen < gensToEvolve; currGen++) {
+        std::cout << "\rTraining gen: " << (currGen + 1) << std::flush;
         trainGen(players);
-        std::cout << "\rFinished training gen: " << (currGen + 1) << std::flush;
     }
+
+    clock_t endCPUTime = clock();
+    long endWallTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
+
     std::cout << std::endl;
 
-    outputFormattedTime(std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000 - start);
+    long wallTime = endWallTime - startWallTime;
+    long CPUTime = (endCPUTime - startCPUTime) / CLOCKS_PER_SEC;
+
+    outputFormattedTime("Wall clock time", wallTime);
+    outputFormattedTime("CPU time", CPUTime);
+    std::cout << "Multi-core use: "
+              << 100.0 - (100.0 * (wallTime - (CPUTime / (float) threads)) / (wallTime)) << "%" << std::endl;
+
+    std::cout << "------------------------------------------------" << std::endl << std::endl;
 
     for (int t = 0; t < population; t++)
         delete players.at(t);
@@ -55,13 +105,13 @@ void NNEvolver::trainGen(std::vector<AIPlayer *> players) {
             break;
         }
 
-    int popPerThread = population / this->threads + 1;
+    int popPerThread = (population / this->threads) + 1;
 
     for (int g = 0; g < itersPerGen; g++) {
         std::vector<std::thread> threads(this->threads);
         int thread = 0;
         for (int startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
-            threads.at(thread) = std::thread(&NNEvolver::trainGenThread, this, players, playersPerTable, thread,
+            threads.at(thread) = std::thread(&NNEvolver::trainGenThread, this, players, playersPerTable,
                                              startPopPos == 0 ? 0 : startPopPos + playersPerTable,
                                              startPopPos + popPerThread > population ? population : startPopPos +
                                                                                                     popPerThread);
@@ -77,19 +127,13 @@ void NNEvolver::trainGen(std::vector<AIPlayer *> players) {
 
     // Genetic algorithm for evolution of population
 
-    if (evolutionStrat == ELISIST) {
-        std::vector<AIPlayer *> parents(numOfParents);
-        for (int p = 0; p < numOfParents; p++) {
-            parents.at(p) = players.at(p);
-            parents.at(p)->resetMoney();
-        }
-
-        elitistCombination(players, parents);
-    } else if (evolutionStrat == PAIR_CROSS)
-        pairCrossover(players);
+    bool lastGen = currGen == gensToEvolve - 1;
+    geneticAlgorithm->evolve(players, lastGen);
+    if (lastGen)
+        writeToFile(players.at(0)->getNN());
 }
 
-void NNEvolver::trainGenThread(std::vector<AIPlayer *> players, int playersPerTable, int threadNum, int startPlayer,
+void NNEvolver::trainGenThread(std::vector<AIPlayer *> players, int playersPerTable, int startPlayer,
                                int endPlayer) {
     for (int t = startPlayer / playersPerTable; t < endPlayer / playersPerTable; t++) {
         std::vector<Player *> tablePlayers(playersPerTable);
@@ -97,63 +141,6 @@ void NNEvolver::trainGenThread(std::vector<AIPlayer *> players, int playersPerTa
             tablePlayers.at(p) = players.at(t * playersPerTable + p);
         Table table(tablePlayers);
         table.play();
-    }
-}
-
-void NNEvolver::elitistCombination(std::vector<AIPlayer *> players, std::vector<AIPlayer *> parents) {
-    NeuralNetwork *evolvedNN = players.at(0)->getNN()->cloneNetworkStructure(false);
-
-    int layers = parents.at(0)->getNN()->neuronsPerLayer.size();
-    const std::vector<int> neuronsPerLayer = parents.at(0)->getNN()->neuronsPerLayer;
-    for (int l = 0; l < layers - 1; l++)
-        for (int n = 0; n < parents.at(0)->getNN()->neuronsPerLayer.at(l); n++)
-            for (int nn = 0; nn < parents.at(0)->getNN()->neuronsPerLayer.at(l + 1); nn++) {
-                double weight = 0;
-                for (int p = 0; p < numOfParents; p++)
-                    weight += parents.at(p)->getNN()->getWeightaAt(l, n, nn);
-                evolvedNN->setWeightAt(l, n, nn, weight / numOfParents);
-            }
-
-    if (currGen == gensToEvolve - 1) {
-        evolvedNN->serialize(outFileName + ".dat");
-    } else {
-        for (int p = 0; p < population; p++) {
-            evolvedNN->cloneNetworkInto(players[p]->getNN());
-            int mods = mt_rand() % 10 + 5;
-            for (int m = 0; m < mods; m++) {
-                double noise = ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
-                int l = mt_rand() % (layers - 1);
-                int n = mt_rand() % neuronsPerLayer.at(l);
-                int nn = mt_rand() % neuronsPerLayer.at(l + 1);
-                players.at(p)->getNN()->setWeightAt(l, n, nn, players.at(p)->getNN()->getWeightaAt(l, n, nn) + noise);
-            }
-        }
-    }
-
-    delete evolvedNN;
-}
-
-void NNEvolver::pairCrossover(std::vector<AIPlayer *> players) {
-    std::vector<int> neuronsPerLayer = players.at(0)->getNN()->neuronsPerLayer;
-    for (int pop = 0; pop < population - 1; pop += 2) {
-        for (int layer = 0; layer < neuronsPerLayer.size() - 1; layer++) {
-            int neuronsInLayer = neuronsPerLayer.at(layer);
-            for (int neuron = 0; neuron < neuronsInLayer; neuron++) {
-                int neuronsInNextLayer = neuronsPerLayer.at(layer + 1);
-                for (int nextLayerNeuron = 0; nextLayerNeuron < neuronsInNextLayer; nextLayerNeuron+=2) {
-                    double connSwapNetwork1 = players.at(pop)->getNN()->getWeightaAt(layer, neuron, nextLayerNeuron);
-                    double connSwapNetwork2 = players.at(pop + 1)-> getNN()->getWeightaAt(layer, neuron, nextLayerNeuron);
-                    if (mt_rand() % 100 < 2) // 2% chance of mutation
-                        connSwapNetwork1 += ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
-                    if (mt_rand() % 100 < 2) // 2% chance of mutation
-                        connSwapNetwork2 += ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
-                    if (mt_rand() % 10 < 6) { // 60% chance of crossover
-                        players.at(pop)->getNN()->setWeightAt(layer, neuron, nextLayerNeuron, connSwapNetwork2);
-                        players.at(pop + 1)->getNN()->setWeightAt(layer, neuron ,nextLayerNeuron, connSwapNetwork1);
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -181,8 +168,8 @@ void NNEvolver::quicksort(std::vector<AIPlayer *> players, int lPiv, int rPiv) {
         quicksort(players, a, rPiv);
 }
 
-void NNEvolver::outputFormattedTime(unsigned long dur) {
-    std::cout << "Duration: ";
+void NNEvolver::outputFormattedTime(std::string timeType, unsigned long dur) {
+    std::cout << timeType << ": ";
     if (dur / 3600 > 0)
         std::cout << std::setprecision(2) << dur / 3600 << "h ";
     if ((dur % 3600) / 60 > 0)
