@@ -1,7 +1,7 @@
 #include "../../headers/gen_algo/ElitistCombination.h"
 #include "../../headers/nn/NNEvolver.h"
 
-void ElitistCombination::evolve(std::vector<AIPlayer *> players, bool lastGen) {
+void ElitistCombination::evolve(std::vector<AIPlayer *> &players, bool lastGen) {
     int population = players.size();
     NeuralNetwork *evolvedNN = players.at(0)->getNN()->cloneNetworkStructure(false);
 

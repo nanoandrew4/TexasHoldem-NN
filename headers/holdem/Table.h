@@ -67,7 +67,7 @@ private:
      * @param tableInfo Array of size (4 + ActivePlayers - 1) where the table information is written to
      * @param currPlayer Player collecting information on the table
      */
-    void getTableInfo(std::vector<double> tableInfo, Player *currPlayer);
+    void getTableInfo(std::vector<double> &tableInfo, Player *currPlayer);
 
     // Face up cards on the table
     std::vector<Card *> communityCards;

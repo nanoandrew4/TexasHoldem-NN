@@ -15,7 +15,7 @@ public:
      * @param players Vector containing all agents
      * @param lastGen True if this is the last generation to be evolved, false otherwise
      */
-    void evolve(std::vector<AIPlayer *> players, bool lastGen);
+    void evolve(std::vector<AIPlayer *> &players, bool lastGen);
 
     std::string getAlgorithmType();
 

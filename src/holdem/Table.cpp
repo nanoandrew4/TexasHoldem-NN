@@ -208,7 +208,7 @@ void Table::splitPot() {
     }
 }
 
-void Table::getTableInfo(std::vector<double> tableInfo, Player *currPlayer) {
+void Table::getTableInfo(std::vector<double> &tableInfo, Player *currPlayer) {
     tableInfo.at(0) = lastRaise;
     tableInfo.at(1) = pot;
     tableInfo.at(2) = activePlayers - 1; // Alternatively use numOfPlayers

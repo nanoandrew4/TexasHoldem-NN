@@ -35,6 +35,9 @@ public:
     static std::string shortenInt(int intToShorten);
 
 private:
+    /// Vector of players to be evolved
+    std::vector<AIPlayer *> players;
+
     /// Global evolution variables
     int population;
     int gensToEvolve;
@@ -61,27 +64,24 @@ private:
     /**
      * Takes care of initializing the worker threads to simulate a tournament, and after all threads are done,
      * the agents are evolved using the desired evolution algorithm.
-     *
-     * @param players Vector of AIPlayers to be trained
      */
-    void trainGen(std::vector<AIPlayer *> players);
+    void trainGen();
 
     /**
      * Training thread, simulates 'itersPerGen' tables, using players in vector 'players' between 'startPlayer' index
      * and 'endPlayer' index. Breaks up work load amongst threads to improve runtime. Threads are joined before anything
      * is done with the players vector.
      *
-     * @param players Vector of AIPlayers to be trained
      * @param playersPerTable Number of players that sit at a table
      * @param startPlayer Index of players vector this thread should start at, in 'players' vector
      * @param endPlayer Index of players vector this thread should end at, in 'players' vector
      */
-    void trainGenThread(std::vector<AIPlayer *> players, int playersPerTable, int startPlayer, int endPlayer);
+    void trainGenThread(int playersPerTable, int startPlayer, int endPlayer);
 
     /**
      * Sorts vector of agents in descending order, based on how much money they have.
      */
-    void quicksort(std::vector<AIPlayer *>, int, int);
+    void quicksort(int lPiv, int rPiv);
 
     /**
      * Outputs a given number in hours, minutes and seconds.

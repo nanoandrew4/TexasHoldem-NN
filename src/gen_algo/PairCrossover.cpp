@@ -1,6 +1,6 @@
 #include "../../headers/gen_algo/PairCrossover.h"
 
-void PairCrossover::evolve(std::vector<AIPlayer *> players, bool lastGen) {
+void PairCrossover::evolve(std::vector<AIPlayer *> &players, bool lastGen) {
     if (lastGen)
         return;
 
@@ -54,6 +54,6 @@ void PairCrossover::setEvolutionVars() {
 }
 
 void PairCrossover::displayEvolutionVars() {
-    std::cout << "Crossover rate: " << crossoverRate / 10.0 << "%" <<  std::endl;
+    std::cout << "Crossover rate: " << crossoverRate / 10.0 << "%" << std::endl;
     std::cout << "Mutation rate: " << mutationRate / 10.0 << "%" << std::endl;
 }

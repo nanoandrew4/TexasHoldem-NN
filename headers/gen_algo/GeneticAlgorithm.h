@@ -16,7 +16,7 @@ public:
      * @param players Vector of players (population)
      * @param lastGen True if this is the last generation to be evolved, false otherwise
      */
-    virtual void evolve(std::vector<AIPlayer *> players, bool lastGen) = 0;
+    virtual void evolve(std::vector<AIPlayer *> &players, bool lastGen) = 0;
 
     /**
      * Returns the name of the evolutionary algorithm an implementation of this class uses. Useful for displaying to

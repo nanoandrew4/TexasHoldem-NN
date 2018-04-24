@@ -65,7 +65,6 @@ std::string NNEvolver::shortenInt(int intToShorten) {
 }
 
 void NNEvolver::train() {
-    std::vector<AIPlayer *> players;
     for (int p = 0; p < population; p++)
         players.push_back(new AIPlayer());
 
@@ -75,7 +74,7 @@ void NNEvolver::train() {
 
     for (; currGen < gensToEvolve; currGen++) {
         std::cout << "\rTraining gen: " << (currGen + 1) << std::flush;
-        trainGen(players);
+        trainGen();
     }
 
     clock_t endCPUTime = clock();
@@ -97,7 +96,7 @@ void NNEvolver::train() {
         delete players.at(t);
 }
 
-void NNEvolver::trainGen(std::vector<AIPlayer *> players) {
+void NNEvolver::trainGen() {
     int playersPerTable = 2;
     for (int p = 10; p > 2; p--)
         if (population % p == 0) {
@@ -111,7 +110,7 @@ void NNEvolver::trainGen(std::vector<AIPlayer *> players) {
         std::vector<std::thread> threads(this->threads);
         int thread = 0;
         for (int startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
-            threads.at(thread) = std::thread(&NNEvolver::trainGenThread, this, players, playersPerTable,
+            threads.at(thread) = std::thread(&NNEvolver::trainGenThread, this, playersPerTable,
                                              startPopPos == 0 ? 0 : startPopPos + playersPerTable,
                                              startPopPos + popPerThread > population ? population : startPopPos +
                                                                                                     popPerThread);
@@ -122,7 +121,7 @@ void NNEvolver::trainGen(std::vector<AIPlayer *> players) {
             threads.at(t).join();
         threads.clear();
 
-        quicksort(players, 0, players.size() - 1);
+        quicksort(0, players.size() - 1);
     }
 
     // Genetic algorithm for evolution of population
@@ -133,7 +132,7 @@ void NNEvolver::trainGen(std::vector<AIPlayer *> players) {
         writeToFile(players.at(0)->getNN());
 }
 
-void NNEvolver::trainGenThread(std::vector<AIPlayer *> players, int playersPerTable, int startPlayer,
+void NNEvolver::trainGenThread(int playersPerTable, int startPlayer,
                                int endPlayer) {
     for (int t = startPlayer / playersPerTable; t < endPlayer / playersPerTable; t++) {
         std::vector<Player *> tablePlayers(playersPerTable);
@@ -144,7 +143,7 @@ void NNEvolver::trainGenThread(std::vector<AIPlayer *> players, int playersPerTa
     }
 }
 
-void NNEvolver::quicksort(std::vector<AIPlayer *> players, int lPiv, int rPiv) {
+void NNEvolver::quicksort(int lPiv, int rPiv) {
     int pivot = players.at(lPiv + (rPiv - lPiv) / 2)->getMoney();
     int a = lPiv, b = rPiv;
 
@@ -163,9 +162,9 @@ void NNEvolver::quicksort(std::vector<AIPlayer *> players, int lPiv, int rPiv) {
     }
 
     if (lPiv < b)
-        quicksort(players, lPiv, b);
+        quicksort(lPiv, b);
     if (a < rPiv)
-        quicksort(players, a, rPiv);
+        quicksort(a, rPiv);
 }
 
 void NNEvolver::outputFormattedTime(std::string timeType, unsigned long dur) {
