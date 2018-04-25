@@ -4,13 +4,13 @@
 
 bool Table::output = false;
 
-Table::Table(std::vector<Player *> players) {
+Table::Table(std::vector<Player *> &players) {
     if (players.size() < 2) {
         std::cout << "Table must have at least 2 players" << std::endl;
         return;
     }
     this->players = std::move(players);
-    this->numOfPlayers = this->players.size();
+    this->numOfPlayers = players.size();
 }
 
 Table::~Table() = default;

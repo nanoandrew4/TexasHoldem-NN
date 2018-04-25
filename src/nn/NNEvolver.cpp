@@ -8,7 +8,8 @@
 NNEvolver::NNEvolver() {
     std::cout << "Enter population size, generations to train, game iterations per "
               << "generation and number of threads to be used" << std::endl;
-    std::cin >> population >> gensToEvolve >> itersPerGen >> threads;
+    std::cin >> population >> gensToEvolve >> itersPerGen >> numOfThreads;
+    threadGens.resize(numOfThreads, 0);
     std::cout << "Enter 0 to use elitist evolution, or 1 to use pair crossover evolution" << std::endl;
 
     int eStrat;
@@ -22,6 +23,14 @@ NNEvolver::NNEvolver() {
             break;
     }
     geneticAlgorithm->setEvolutionVars();
+
+    for (int p = 10; p > 2; p--)
+        if (population % p == 0) {
+            playersPerTable = p;
+            break;
+        }
+
+    popPerThread = (population / numOfThreads) + 1;
 }
 
 NNEvolver::~NNEvolver() {
@@ -33,9 +42,10 @@ void NNEvolver::displayEvolverInfo() {
     std::cout << "------------------------------------------------" << std::endl;
     std::cout << "Evolution type: " << geneticAlgorithm->getAlgorithmType() << std::endl;
     std::cout << "Population: " << population << std::endl;
+    std::cout << "Players per table: " << playersPerTable << std::endl;
     std::cout << "Target generations to evolve: " << gensToEvolve << std::endl;
     std::cout << "Full table rotations per generation: " << itersPerGen << std::endl;
-    std::cout << "Threads used: " << threads << std::endl << std::endl;
+    std::cout << "Threads used: " << numOfThreads << std::endl << std::endl;
 
     std::cout << "~Evolution type specific options~" << std::endl;
     geneticAlgorithm->displayEvolutionVars();
@@ -72,10 +82,18 @@ void NNEvolver::train() {
     long startWallTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
     clock_t startCPUTime = clock();
 
-    for (; currGen < gensToEvolve; currGen++) {
-        std::cout << "\rTraining gen: " << (currGen + 1) << std::flush;
-        trainGen();
+    std::vector<std::thread> threads(numOfThreads);
+    int thread = 0;
+    for (int startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
+        int startTable = startPopPos == 0 ? 0 : (startPopPos + playersPerTable) / playersPerTable;
+        int endTable =
+                (startPopPos + popPerThread > population ? population : startPopPos + popPerThread) / playersPerTable;
+        threads.at(thread) = std::thread(&NNEvolver::trainerThread, this, thread, startTable, endTable);
+        thread++;
     }
+
+    for (int t = 0; t < numOfThreads; t++)
+        threads.at(t).join();
 
     clock_t endCPUTime = clock();
     long endWallTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
@@ -88,7 +106,7 @@ void NNEvolver::train() {
     outputFormattedTime("Wall clock time", wallTime);
     outputFormattedTime("CPU time", CPUTime);
     std::cout << "Multi-core use: "
-              << 100.0 - (100.0 * (wallTime - (CPUTime / (float) threads)) / (wallTime)) << "%" << std::endl;
+              << 100.0 - (100.0 * (wallTime - (CPUTime / (float) numOfThreads)) / (wallTime)) << "%" << std::endl;
 
     std::cout << "------------------------------------------------" << std::endl << std::endl;
 
@@ -96,50 +114,42 @@ void NNEvolver::train() {
         delete players.at(t);
 }
 
-void NNEvolver::trainGen() {
-    int playersPerTable = 2;
-    for (int p = 10; p > 2; p--)
-        if (population % p == 0) {
-            playersPerTable = p;
-            break;
+void NNEvolver::trainerThread(int threadNum, int startTable, int endTable) {
+    for (int currGen = 0; currGen < gensToEvolve; currGen++) {
+        threadGens.at(threadNum) = currGen;
+        for (int t = 0; t < numOfThreads;) { // Wait for all threads to catch up to this generation
+            if (threadGens.at(t) >= currGen)
+                t++;
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
 
-    int popPerThread = (population / this->threads) + 1;
-
-    for (int g = 0; g < itersPerGen; g++) {
-        std::vector<std::thread> threads(this->threads);
-        int thread = 0;
-        for (int startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
-            threads.at(thread) = std::thread(&NNEvolver::trainGenThread, this, playersPerTable,
-                                             startPopPos == 0 ? 0 : startPopPos + playersPerTable,
-                                             startPopPos + popPerThread > population ? population : startPopPos +
-                                                                                                    popPerThread);
-            thread++;
+        // Play all tables
+        for (int t = startTable; t < endTable; t++) {
+            std::vector<Player *> tablePlayers(playersPerTable);
+            for (int p = 0; p < playersPerTable; p++)
+                tablePlayers.at(p) = players.at(t * playersPerTable + p);
+            Table table(tablePlayers);
+            table.play();
         }
 
-        for (int t = 0; t < this->threads; t++)
-            threads.at(t).join();
-        threads.clear();
+        mu.lock();
+        threadsDone++;
+        mu.unlock();
 
-        quicksort(0, players.size() - 1);
-    }
+        // Last thread to finish their portion of the generation sorts and evolves the players
+        if (threadsDone == numOfThreads) {
+            std::cout << "\rFinished training gen: " << currGen + 1 << std::flush;
 
-    // Genetic algorithm for evolution of population
+            quicksort(0, players.size() - 1);
 
-    bool lastGen = currGen == gensToEvolve - 1;
-    geneticAlgorithm->evolve(players, lastGen);
-    if (lastGen)
-        writeToFile(players.at(0)->getNN());
-}
+            // Genetic algorithm for evolution of population
+            bool lastGen = currGen == gensToEvolve - 1;
+            geneticAlgorithm->evolve(players, lastGen);
+            if (lastGen)
+                writeToFile(players.at(0)->getNN());
 
-void NNEvolver::trainGenThread(int playersPerTable, int startPlayer,
-                               int endPlayer) {
-    for (int t = startPlayer / playersPerTable; t < endPlayer / playersPerTable; t++) {
-        std::vector<Player *> tablePlayers(playersPerTable);
-        for (int p = 0; p < playersPerTable; p++)
-            tablePlayers.at(p) = players.at(t * playersPerTable + p);
-        Table table(tablePlayers);
-        table.play();
+            threadsDone = 0;
+        }
     }
 }
 

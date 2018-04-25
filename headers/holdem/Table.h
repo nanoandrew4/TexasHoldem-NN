@@ -7,7 +7,7 @@
 
 class Table {
 public:
-    explicit Table(std::vector<Player *> players);
+    explicit Table(std::vector<Player *> &players);
 
     ~Table();
 
