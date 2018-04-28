@@ -17,6 +17,8 @@ public:
      */
     void play();
 
+    void playUntilOneLeft();
+
     // Controls whether game info and updates are printed to the console
     static bool output;
 private:

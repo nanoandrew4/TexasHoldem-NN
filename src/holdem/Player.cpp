@@ -11,6 +11,7 @@ Player::~Player() = default;
 
 int Player::play(std::vector<double> tableInfo) {
     std::cout << name << "'s hand: "; hand->displayHand(hand->pocket);
+    std::cout << name << "'s money: $" << money << std::endl;
     char opt = ' ';
 
     do {

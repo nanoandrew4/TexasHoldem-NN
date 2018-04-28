@@ -1,7 +1,9 @@
+#include <iostream>
 #include "../../headers/nn/AIPlayer.h"
 #include "../../headers/holdem/Deck.h"
+#include "../../headers/holdem/Table.h"
 
-std::vector<int> AIPlayer::neuronsPerLayer = {5, 25, 3};
+std::vector<int> AIPlayer::neuronsPerLayer = {5, 20, 10, 3};
 
 AIPlayer::AIPlayer() {
     nn = new NeuralNetwork(neuronsPerLayer, true);
@@ -22,9 +24,20 @@ AIPlayer::~AIPlayer() {
 
 int AIPlayer::play(std::vector<double> tableInfo) {
     int action = nn->getAction(tableInfo);
-    if (action == -1)
+    if (action == -1) {
         playing = false;
-    return (action > 1 && action < tableInfo.at(0)) ? 1 : action; // Deals with 'all in' and improper raise
+        if (Table::output)
+            std::cout << "AI FOLDED" << std::endl;
+        return -1;
+    } else if (action == 1 || action <= tableInfo.at(0) || money < action) {
+        if (Table::output)
+            std::cout << "AI CHECKED" << std::endl;
+        return 1;
+    } else if (action > 1 && action > tableInfo.at(0) && money >= action) {
+        if (Table::output)
+            std::cout << "AI RAISED" << std::endl;
+        return action;
+    }
 }
 
 double AIPlayer::getHandPotential(std::vector<Card *> communityCards) {

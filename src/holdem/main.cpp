@@ -37,12 +37,12 @@ int main() {
 
             for (int i = 0; i < opt; i++) {
                 std::cin >> file;
-                players.push_back(new AIPlayer(file));
+                players.push_back(new AIPlayer(file, "AI"));
             }
 
             Table table(players);
             Table::output = true;
-            table.play();
+            table.playUntilOneLeft();
             Table::output = false;
         } else if (opt == 2) {
             NNEvolver evolver;

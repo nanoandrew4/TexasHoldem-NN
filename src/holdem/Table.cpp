@@ -9,8 +9,8 @@ Table::Table(std::vector<Player *> &players) {
         std::cout << "Table must have at least 2 players" << std::endl;
         return;
     }
-    this->players = std::move(players);
     this->numOfPlayers = players.size();
+    this->players = std::move(players);
 }
 
 Table::~Table() = default;
@@ -67,6 +67,12 @@ void Table::play() {
     }
 }
 
+void Table::playUntilOneLeft() {
+    while (activePlayers > 1)
+        play();
+}
+
+
 bool Table::newRound(std::vector<Card *> &cards) {
     activePlayers = numOfPlayers;
     // Count how many players are able to play the next round
@@ -76,7 +82,7 @@ bool Table::newRound(std::vector<Card *> &cards) {
             activePlayers--;
     }
 
-    if (activePlayers <= 1)
+    if (activePlayers < 2)
         return false;
 
     pot = lastRaise = lastPlayerRaised = 0;
@@ -85,8 +91,10 @@ bool Table::newRound(std::vector<Card *> &cards) {
     for (int p = 0; p < numOfPlayers * 2; p++)
         cards.push_back(deck.deal());
 
-    for (int p = 0; p < numOfPlayers; p++)
+    for (int p = 0; p < numOfPlayers; p++) {
         players.at(p)->hand = new Hand(cards.at(p), cards.at(p + numOfPlayers));
+//        std::cout << players.at(p)->getName() << "'s hand: "; players.at(p)->hand->displayHand();
+    }
 
     return true;
 }
@@ -103,10 +111,10 @@ int Table::assignSpecialRoles(int round) {
                 smallBlind = players.at(lastPlayerRaised);
                 blinds++;
 
-                if (activePlayers == 2)
-                    break;
                 if (output)
                     std::cout << "Small Blind: " << smallBlind->getName() << std::endl;
+                if (activePlayers == 2)
+                    break;
             } else {
                 lastPlayerRaised = (round + p) % numOfPlayers;
                 bigBlind = players.at(lastPlayerRaised);
@@ -181,10 +189,10 @@ void Table::splitPot() {
     int winners = activePlayers;
 
     // Compare hands
-    std::vector<int> bestHands(numOfPlayers);
+    std::vector<double> bestHands(numOfPlayers);
     for (int p = 0; p < numOfPlayers; p++) {
         if (players.at(p)->isPlaying()) {
-            players.at(p)->hand->getHandScore(communityCards);
+            bestHands.at(p) = players.at(p)->hand->getHandScore(communityCards);
             if (bestHands.at(p) < bestHand)
                 bestHand = bestHands.at(1);
         }
