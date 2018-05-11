@@ -31,14 +31,16 @@ public:
     bool isPlaying() { return playing; };
 
     // Player's hand
-    Hand *hand;
+    Hand hand = Hand(nullptr, nullptr);
 
     /**
-     * Removes an amount, when a bet is made.
+     * Removes an amount, when a bet is made. If the ante exceeds the amount the player has, the player has money, and
+     * they decide to check, the 'allIn' flag will be set, to ensure the player can finish the round.
      *
      * @param ante Amount bet
+     * @return Amount anted (will be different to the required ante if player went all in)
      */
-    void anteUp(int ante);
+    int anteUp(int ante);
 
     /**
      * Increases the players money, when a round is won.
@@ -55,6 +57,8 @@ public:
      * Prepares player for a new round, by setting the 'playing' boolean to true.
      */
     void newRound();
+
+    bool isAllIn() { return allIn; }
 
     /**
      * For resetting an agents money after a generation of training only. Sets this players money to the
@@ -79,6 +83,7 @@ private:
     static const int initMoney = 10000;
     int money = 10000;
     bool playing = true;
+    bool allIn = false;
 
     std::string name;
 };

@@ -73,10 +73,10 @@ private:
      * is done with the players vector.
      *
      * @param threadNum Thread identifier
-     * @param startPlayer Index of players vector this thread should start at, in 'players' vector
-     * @param endPlayer Index of players vector this thread should end at, in 'players' vector
+     * @param startTable TODO
+     * @param endTable TODO
      */
-    void trainerThread(int threadNum, int startPlayer, int endPlayer);
+    void trainerThread(int threadNum, int startTable, int endTable);
 
     /**
      * Sorts vector of agents in descending order, based on how much money they have.
@@ -90,6 +90,12 @@ private:
      * @param dur Duration to be displayed in hours, minutes and seconds
      */
     void outputFormattedTime(std::string timeType, unsigned long dur);
+
+    int raises = 0;
+    int rounds = 0;
+    int folds = 0;
+    int checks = 0;
+    int richestPlayer = 0;
 };
 
 #endif //TEXAS_HOLDEM_NN_NNEVOLVER_H

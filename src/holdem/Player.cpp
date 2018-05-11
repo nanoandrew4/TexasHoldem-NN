@@ -10,7 +10,7 @@ Player::Player(std::string name) {
 Player::~Player() = default;
 
 int Player::play(std::vector<double> tableInfo) {
-    std::cout << name << "'s hand: "; hand->displayHand(hand->pocket);
+    std::cout << name << "'s hand: "; hand.displayHand();
     std::cout << name << "'s money: $" << money << std::endl;
     char opt = ' ';
 
@@ -33,7 +33,9 @@ int Player::play(std::vector<double> tableInfo) {
             }
             return amount;
         case 'c':
-            return 0;
+            if (money > 0 || allIn)
+                return 0;
+            return -1; // Force fold if cannot afford to continue
         case 'f':
             playing = false;
             return -1;
@@ -42,8 +44,16 @@ int Player::play(std::vector<double> tableInfo) {
     std::cout << std::endl;
 }
 
-void Player::anteUp(int ante) {
-    this->money -= ante;
+int Player::anteUp(int ante) {
+    if (ante >= money) {
+        int anteAvail = ante - money;
+        this->money = 0;
+        allIn = true;
+        return anteAvail;
+    } else {
+        this->money -= ante;
+        return ante;
+    }
 }
 
 void Player::collectWinnings(int winnings) {
@@ -56,4 +66,5 @@ int Player::getMoney() {
 
 void Player::newRound() {
     this->playing = (money > 0);
+    allIn = false;
 }

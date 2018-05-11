@@ -36,12 +36,15 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
     // Check for flushCheck, straightCheck and # of cards. All else can be determined from this.
     double score = 0, valScore = 0;
 
-    int numOfCards = (int) communityCards.size() + 2;
+    int numOfCards = (int) communityCards.size() + 2; // Community cards plus pocket (always 2)
 
     // Combine hand and community cards into one vector, and sort in descending order by value
-    std::vector<Card *> cards;
-    cards.insert(cards.end(), pocket.begin(), pocket.end());
-    cards.insert(cards.end(), communityCards.begin(), communityCards.end());
+    std::vector<Card *> cards(pocket.size() + communityCards.size());
+    for (int c = 0; c < pocket.size(); c++)
+        cards.at(c) = pocket.at(c);
+    for (int c = 0; c < communityCards.size(); c++)
+        cards.at(c + 2) = communityCards.at(c);
+
     quicksortByVal(cards, 0, cards.size() - 1);
 
     std::vector<int> straightRes(8, 0);
@@ -113,7 +116,7 @@ double Hand::valComboCheck(std::vector<Card *> cards) {
             if (cards.at(c)->getCardValue() != coi.at(0) && cards.at(c)->getCardValue() != coi.at(1))
                 kickers.at(k++) = cards.at(c)->getCardValue();
     }
-
+    // TODO: DOCUMENT SCORING METHOD...
     if (vals.at(coi.at(0)) == 2 && vals.at(coi.at(1)) != 2) { // Pair
         //       Base    Card in pair
         score += PAIR + (coi.at(0) / 20.0);

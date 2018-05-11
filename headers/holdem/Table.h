@@ -21,6 +21,11 @@ public:
 
     // Controls whether game info and updates are printed to the console
     static bool output;
+
+    int raises = 0;
+    int rounds = 0;
+    int folds = 0;
+    int checks = 0;
 private:
 
     /**
@@ -38,7 +43,7 @@ private:
      * @param cards Vector of Card* type, where the cards to be played are dealt, and assigned to the various players
      * @return True if a new round can be played, false if all but one players are out of money
      */
-    bool newRound(std::vector<Card *> &cards);
+    bool newRound();
 
     /**
      * Sets the dealer, small blind and big blind roles to different players, depending on the round number.
@@ -54,7 +59,7 @@ private:
      * @param bigBlindSet True if the big blind exists, false otherwise
      * @return Initial quantity required for players to play their hands in the pre-flop
      */
-    int initAntes(bool bigBlindSet);
+    void initAntes(bool bigBlindSet);
 
     /**
      * Splits pot amongst winning players, if applicable. Executed once all betting has finished, and if a tie happened.
@@ -69,7 +74,7 @@ private:
      * @param tableInfo Array of size (4 + ActivePlayers - 1) where the table information is written to
      * @param currPlayer Player collecting information on the table
      */
-    void getTableInfo(std::vector<double> &tableInfo, Player *currPlayer);
+    void getTableInfo(std::vector<double> &tableInfo, int currPlayer);
 
     // Face up cards on the table
     std::vector<Card *> communityCards;

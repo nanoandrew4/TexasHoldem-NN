@@ -129,7 +129,17 @@ void NNEvolver::trainerThread(int threadNum, int startTable, int endTable) {
             for (int p = 0; p < playersPerTable; p++)
                 tablePlayers.at(p) = players.at(t * playersPerTable + p);
             Table table(tablePlayers);
-            table.play();
+            try {
+                table.play();
+                rounds += table.rounds;
+                raises += table.raises;
+                checks += table.checks;
+                folds += table.folds;
+            } catch(std::exception& e) {
+                std::cout << "Error in table" << std::endl;
+                std::cout << "Start table: " << startTable << std::endl;
+                std::cout << "End table: " << endTable << std::endl;
+            }
         }
 
         mu.lock();
@@ -138,13 +148,32 @@ void NNEvolver::trainerThread(int threadNum, int startTable, int endTable) {
 
         // Last thread to finish their portion of the generation sorts and evolves the players
         if (threadsDone == numOfThreads) {
-            std::cout << "\rFinished training gen: " << currGen + 1 << std::flush;
-
+//            std::cout << "\rFinished training gen: " << currGen + 1 << std::flush;
+            for (int p = 0; p < players.size(); p++)
+                if (players.at(p)->getMoney() == 10000)
+                    players.at(p)->anteUp(10000);
             quicksort(0, players.size() - 1);
+            richestPlayer += players.at(0)->getMoney();
+            if (currGen % 100 == 0 && currGen > 0) {
+                std::cout << "Gen " << currGen - 100 << " -> " << currGen << " stats:" << std::endl;
+                std::cout << "Rounds played: " << rounds / 100.0 << std::endl;
+                std::cout << "Times raised: " << raises / 100.0 << std::endl;
+                std::cout << "Times checked: " << checks / 100.0 << std::endl;
+                std::cout << "Times folded: " << folds / 100.0 << std::endl;
+                std::cout << "Richest player money: " << richestPlayer / 100.0 << std::endl;
+                std::cout << std::endl;
+
+                rounds = raises = checks = folds = richestPlayer = 0;
+            }
 
             // Genetic algorithm for evolution of population
             bool lastGen = currGen == gensToEvolve - 1;
-            geneticAlgorithm->evolve(players, lastGen);
+
+            try {
+                geneticAlgorithm->evolve(players, lastGen);
+            } catch(std::exception& e) {
+                std::cout << "Error in evolve" << std::endl;
+            }
             if (lastGen)
                 writeToFile(players.at(0)->getNN());
 
