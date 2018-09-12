@@ -40,14 +40,14 @@ public:
      * @param ante Amount bet
      * @return Amount anted (will be different to the required ante if player went all in)
      */
-    int anteUp(int ante);
+    unsigned long anteUp(unsigned long ante);
 
     /**
      * Increases the players money, when a round is won.
      *
      * @param winnings Amount won
      */
-    void collectWinnings(int winnings);
+    void collectWinnings(unsigned long winnings);
 
     int getMoney();
 

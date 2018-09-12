@@ -1,7 +1,7 @@
 #include <iostream>
+#include <algorithm>
 #include <thread>
 #include <iomanip>
-#include <sstream>
 #include "../../headers/nn/NNEvolver.h"
 #include "../../headers/holdem/Table.h"
 
@@ -24,7 +24,35 @@ NNEvolver::NNEvolver() {
     }
     geneticAlgorithm->setEvolutionVars();
 
-    for (int p = 10; p > 2; p--)
+    for (int p = 10; p > 2; --p)
+        if (population % p == 0) {
+            playersPerTable = p;
+            break;
+        }
+
+    popPerThread = (population / numOfThreads) + 1;
+}
+
+// For testing purposes only
+NNEvolver::NNEvolver(unsigned long population, unsigned long gensToeEvolve, unsigned long itersPerGen,
+                     unsigned long numOfThreads, int evolStrat, int parents, int crossoverRate, int mutationRate) {
+    this->population = population;
+    this->gensToEvolve = gensToeEvolve;
+    this->itersPerGen = itersPerGen;
+    this->numOfThreads = numOfThreads;
+
+    threadGens.resize(numOfThreads, 0);
+
+    switch (evolStrat) {
+        case 0:
+            geneticAlgorithm = new ElitistCombination(parents);
+            break;
+        case 1:
+            geneticAlgorithm = new PairCrossover(crossoverRate, mutationRate);
+            break;
+    }
+
+    for (int p = 10; p > 2; --p)
         if (population % p == 0) {
             playersPerTable = p;
             break;
@@ -63,7 +91,7 @@ void NNEvolver::writeToFile(NeuralNetwork *nn) {
     std::cout << std::endl << "Best agent saved under file: " << oss.str() << std::endl;
 }
 
-std::string NNEvolver::shortenInt(int intToShorten) {
+std::string NNEvolver::shortenInt(unsigned long intToShorten) {
     std::ostringstream oss;
     if (intToShorten / 1000000 > 0)
         oss << intToShorten / 1000000 << "M";
@@ -75,7 +103,7 @@ std::string NNEvolver::shortenInt(int intToShorten) {
 }
 
 void NNEvolver::train() {
-    for (int p = 0; p < population; p++)
+    for (unsigned long p = 0; p < population; ++p)
         players.push_back(new AIPlayer());
 
     displayEvolverInfo();
@@ -83,50 +111,51 @@ void NNEvolver::train() {
     clock_t startCPUTime = clock();
 
     std::vector<std::thread> threads(numOfThreads);
-    int thread = 0;
+    size_t thread = 0;
     for (int startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
         int startTable = startPopPos == 0 ? 0 : (startPopPos + playersPerTable) / playersPerTable;
-        int endTable =
+        unsigned long endTable =
                 (startPopPos + popPerThread > population ? population : startPopPos + popPerThread) / playersPerTable;
-        threads.at(thread) = std::thread(&NNEvolver::trainerThread, this, thread, startTable, endTable);
-        thread++;
+        threads.at(thread++) = std::thread(&NNEvolver::trainerThread, this, thread, startTable, endTable);
     }
 
-    for (int t = 0; t < numOfThreads; t++)
+    for (size_t t = 0; t < numOfThreads; ++t)
         threads.at(t).join();
 
     clock_t endCPUTime = clock();
     long endWallTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
 
-    std::cout << std::endl;
+    std::cout << '\n';
 
     long wallTime = endWallTime - startWallTime;
-    long CPUTime = (endCPUTime - startCPUTime) / CLOCKS_PER_SEC;
+    long CPUTime = (endCPUTime - startCPUTime) / CLOCKS_PER_SEC; // TODO: this needs checking... Once other problems have been solved
 
     outputFormattedTime("Wall clock time", wallTime);
     outputFormattedTime("CPU time", CPUTime);
     std::cout << "Multi-core use: "
-              << 100.0 - (100.0 * (wallTime - (CPUTime / (float) numOfThreads)) / (wallTime)) << "%" << std::endl;
+              << 100.0 - (100.0 * (wallTime - (CPUTime / (float) numOfThreads)) / (wallTime)) << "%\n";
 
-    std::cout << "------------------------------------------------" << std::endl << std::endl;
+    std::cout << "------------------------------------------------\n\n";
 
-    for (int t = 0; t < population; t++)
+    for (unsigned long t = 0; t < population; t++)
         delete players.at(t);
 }
 
-void NNEvolver::trainerThread(int threadNum, int startTable, int endTable) {
-    for (int currGen = 0; currGen < gensToEvolve; currGen++) {
+static auto start = std::chrono::high_resolution_clock::now();
+
+void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTable) {
+    for (unsigned long currGen = 0; currGen < gensToEvolve; ++currGen) {
         threadGens.at(threadNum) = currGen;
-        for (int t = 0; t < numOfThreads;) { // Wait for all threads to catch up to this generation
+        for (size_t t = 0; t < numOfThreads;) { // Wait for all threads to catch up to this generation
             if (threadGens.at(t) >= currGen)
-                t++;
+                ++t;
             std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
 
         // Play all tables
-        for (int t = startTable; t < endTable; t++) {
-            std::vector<Player *> tablePlayers(playersPerTable);
-            for (int p = 0; p < playersPerTable; p++)
+        for (size_t t = startTable; t < endTable; ++t) {
+            std::vector<Player *> tablePlayers((unsigned long) playersPerTable /* Will always be less than 10 */);
+            for (size_t p = 0; p < playersPerTable; ++p)
                 tablePlayers.at(p) = players.at(t * playersPerTable + p);
             Table table(tablePlayers);
             try {
@@ -149,19 +178,27 @@ void NNEvolver::trainerThread(int threadNum, int startTable, int endTable) {
         // Last thread to finish their portion of the generation sorts and evolves the players
         if (threadsDone == numOfThreads) {
 //            std::cout << "\rFinished training gen: " << currGen + 1 << std::flush;
-            for (int p = 0; p < players.size(); p++)
-                if (players.at(p)->getMoney() == 10000)
-                    players.at(p)->anteUp(10000);
-            quicksort(0, players.size() - 1);
+//            for (size_t p = 0; p < players.size(); ++p)
+//                if (players.at(p)->getMoney() == 10000)
+//                    players.at(p)->anteUp(10000);
+            std::sort(players.begin(), players.end(), [] (AIPlayer* left, AIPlayer* right) -> bool {
+                return left->getMoney() > right->getMoney();
+            });
+
             richestPlayer += players.at(0)->getMoney();
             if (currGen % 100 == 0 && currGen > 0) {
-                std::cout << "Gen " << currGen - 100 << " -> " << currGen << " stats:" << std::endl;
-                std::cout << "Rounds played: " << rounds / 100.0 << std::endl;
-                std::cout << "Times raised: " << raises / 100.0 << std::endl;
-                std::cout << "Times checked: " << checks / 100.0 << std::endl;
-                std::cout << "Times folded: " << folds / 100.0 << std::endl;
-                std::cout << "Richest player money: " << richestPlayer / 100.0 << std::endl;
-                std::cout << std::endl;
+                std::cout << "Gen " << currGen - 100 << " -> " << currGen << " stats:\n";
+                std::cout << "Rounds played: " << rounds / 100.0 << '\n';
+                std::cout << "Times raised: " << raises / 100.0 << '\n';
+                std::cout << "Times checked: " << checks / 100.0 << '\n';
+                std::cout << "Times folded: " << folds / 100.0 << '\n';
+                std::cout << "Richest player money: " << richestPlayer / 100.0 << "\n\n";
+
+                auto end = std::chrono::high_resolution_clock::now();
+                long time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                start = end;
+
+                std::cout << "Time taken to evolve 100 gens: " << (time / 100.0) << "ms\n";
 
                 rounds = raises = checks = folds = richestPlayer = 0;
             }
@@ -182,31 +219,7 @@ void NNEvolver::trainerThread(int threadNum, int startTable, int endTable) {
     }
 }
 
-void NNEvolver::quicksort(int lPiv, int rPiv) {
-    int pivot = players.at(lPiv + (rPiv - lPiv) / 2)->getMoney();
-    int a = lPiv, b = rPiv;
-
-    while (a <= b) {
-        while (players.at(a)->getMoney() > pivot)
-            a++;
-        while (players.at(b)->getMoney() < pivot)
-            b--;
-        if (a <= b) {
-            AIPlayer *p = players.at(a);
-            players.at(a) = players.at(b);
-            players.at(b) = p;
-            a++;
-            b--;
-        }
-    }
-
-    if (lPiv < b)
-        quicksort(lPiv, b);
-    if (a < rPiv)
-        quicksort(a, rPiv);
-}
-
-void NNEvolver::outputFormattedTime(std::string timeType, unsigned long dur) {
+void NNEvolver::outputFormattedTime(std::string timeType, long dur) {
     std::cout << timeType << ": ";
     if (dur / 3600 > 0)
         std::cout << std::setprecision(2) << dur / 3600 << "h ";

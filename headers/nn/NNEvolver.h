@@ -16,6 +16,10 @@ public:
      */
     NNEvolver();
 
+    // For testing purposes
+    NNEvolver(unsigned long population, unsigned long gensToeEvolve, unsigned long itersPerGen,
+              unsigned long numOfThreads, int evolStrat, int parents, int crossoverRate, int mutationRate);
+
     ~NNEvolver();
 
     /**
@@ -32,22 +36,22 @@ public:
      * @param intToShorten Integer to be shortened
      * @return String representing shortened integer
      */
-    static std::string shortenInt(int intToShorten);
+    static std::string shortenInt(unsigned long intToShorten);
 
 private:
     /// Vector of players to be evolved
     std::vector<AIPlayer *> players;
 
     /// Global evolution variables
-    int population;
-    int gensToEvolve;
-    int itersPerGen;
-    int numOfThreads;
+    unsigned long population;
+    unsigned long gensToEvolve;
+    unsigned long itersPerGen;
+    unsigned long numOfThreads;
 
     int playersPerTable = 2;
-    int popPerThread;
+    unsigned long popPerThread;
     std::vector<long> threadGens;
-    int threadsDone = 0;
+    unsigned long threadsDone = 0;
 
     std::mutex mu;
 
@@ -76,12 +80,7 @@ private:
      * @param startTable TODO
      * @param endTable TODO
      */
-    void trainerThread(int threadNum, int startTable, int endTable);
-
-    /**
-     * Sorts vector of agents in descending order, based on how much money they have.
-     */
-    void quicksort(int lPiv, int rPiv);
+    void trainerThread(size_t threadNum, size_t startTable, size_t endTable);
 
     /**
      * Outputs a given number in hours, minutes and seconds.
@@ -89,8 +88,9 @@ private:
      * @param timeType String to be displayed before the formatted time, can be used as an identifier
      * @param dur Duration to be displayed in hours, minutes and seconds
      */
-    void outputFormattedTime(std::string timeType, unsigned long dur);
+    void outputFormattedTime(const std::string timeType, long dur);
 
+    // Debugging vals
     int raises = 0;
     int rounds = 0;
     int folds = 0;

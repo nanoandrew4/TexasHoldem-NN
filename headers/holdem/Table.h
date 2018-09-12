@@ -35,7 +35,7 @@ private:
      * @param startPlayer Player that makes the first betting decision
      * @param lastRaise Optional initial raise, used for setting the pre-flop call price
      */
-    void playRound(int startPlayer, int lastRaise = 0);
+    void playRound(unsigned long startPlayer, int lastRaise = 0);
 
     /**
      * Resets the table to allow for a new round to be played.
@@ -51,7 +51,7 @@ private:
      * @param round Round number that is about to be played
      * @return Number of blinds in the game (1 if only small blind, 2 if small and big blind)
      */
-    int assignSpecialRoles(int round);
+    int assignSpecialRoles(unsigned long round);
 
     /**
      * Makes the initial antes for small blind and big blind, if they exist.
@@ -74,7 +74,7 @@ private:
      * @param tableInfo Array of size (4 + ActivePlayers - 1) where the table information is written to
      * @param currPlayer Player collecting information on the table
      */
-    void getTableInfo(std::vector<double> &tableInfo, int currPlayer);
+    void getTableInfo(std::vector<double> &tableInfo, unsigned long currPlayer);
 
     // Face up cards on the table
     std::vector<Card *> communityCards;
@@ -87,8 +87,8 @@ private:
     Player *smallBlind;
     Player *bigBlind;
 
-    int numOfPlayers;
-    int activePlayers;
+    unsigned long numOfPlayers;
+    unsigned long activePlayers;
 
     // Big blind, value that all players must ante up in order to play their hands
     static const int BB = 2;
@@ -96,9 +96,9 @@ private:
     // Small blind, value the player assigned this role must ante up in order to play his hand (1/2 BB)
     static const int SB = 1;
 
-    int pot = 0; // Money on the table
-    int lastRaise = 0; // Last amount raised
-    int lastPlayerRaised = 0; // Last player who raised
+    unsigned long pot = 0; // Money on the table
+    unsigned long lastRaise = 0; // Last amount raised
+    unsigned long lastPlayerRaised = 0; // Last player who raised
 };
 
 #endif //TEXAS_HOLDEM_NN_TABLE_H

@@ -16,7 +16,7 @@ Table::Table(std::vector<Player *> &players) {
 Table::~Table() = default;
 
 void Table::play() {
-    for (int dealer = 0; dealer < numOfPlayers; dealer++) {
+    for (unsigned long dealer = 0; dealer < numOfPlayers; dealer++) {
         if (!newRound())
             return;
 
@@ -24,7 +24,7 @@ void Table::play() {
         initAntes(blinds == 2);
 
         // Pre-flop
-        playRound((lastPlayerRaised + 1) % numOfPlayers, lastRaise);
+        playRound((lastPlayerRaised + 1) % numOfPlayers, (int) lastRaise /* Will always be a small val */);
 
         // Return initial ante to small blind if still playing, since they will have committed an excess to the pot
         if (smallBlind->isPlaying() && blinds == 2) {
@@ -54,7 +54,7 @@ void Table::play() {
             splitPot();
         else // Last standing player takes all the cash
             try {
-                for (int p = 0; p < numOfPlayers; p++)
+                for (size_t p = 0; p < numOfPlayers; p++)
                     if (players.at(p)->isPlaying()) {
                         if (output)
                             std::cout << players.at(p)->getName() << " won" << std::endl << std::endl;
@@ -76,14 +76,14 @@ bool Table::newRound() {
     try {
         activePlayers = numOfPlayers;
         // Count how many players are able to play the next round
-        for (int p = 0; p < numOfPlayers; p++) {
+        for (size_t p = 0; p < numOfPlayers; p++) {
             players.at(p)->newRound();
             if (!players.at(p)->isPlaying())
                 activePlayers--;
         }
 
         int count = 0;
-        for (int i = 0; i < numOfPlayers; i++) if (players.at(i)->isPlaying()) count++;
+        for (size_t i = 0; i < numOfPlayers; i++) if (players.at(i)->isPlaying()) count++;
         if (count != activePlayers) {
             std::cout << "Error in activPlayers: " << activePlayers << " " << count << std::endl;
             exit(11);
@@ -103,8 +103,8 @@ bool Table::newRound() {
         for (int p = 0; p < activePlayers * 2; p++)
             cards.push_back(deck.deal());
 
-        int cardCount = 0;
-        for (int p = 0; p < numOfPlayers; p++) {
+        unsigned long cardCount = 0;
+        for (size_t p = 0; p < numOfPlayers; p++) {
             if (players.at(p)->isPlaying()) {
                 players.at(p)->hand = Hand(cards.at(cardCount), cards.at(cardCount + activePlayers));
                 cardCount++;
@@ -117,7 +117,7 @@ bool Table::newRound() {
     return true;
 }
 
-int Table::assignSpecialRoles(int round) {
+int Table::assignSpecialRoles(unsigned long round) {
     int blinds = 0;
     try {
         dealer = players.at(round);
@@ -164,8 +164,8 @@ void Table::initAntes(bool bigBlindSet) {
 /*
  * initRaise = 0 by default, and is only different on the pre-flop round
  */
-void Table::playRound(int startPlayer, int initRaise/* = 0*/) {
-    lastRaise = initRaise;
+void Table::playRound(unsigned long startPlayer, int initRaise/* = 0*/) {
+    lastRaise = (unsigned long) initRaise;
     rounds++;
 
     // If pre-flop, big blind has already payed in, so do not go to him (essentially go to startPlayer - 1)
@@ -174,10 +174,10 @@ void Table::playRound(int startPlayer, int initRaise/* = 0*/) {
     if (output)
         std::cout << "Starting betting\n\n";
 
-    int playerAction = -2;
+    long long playerAction = -2;
 
     int count = 0;
-    for (int i = 0; i < numOfPlayers; i++) if (players.at(i)->isPlaying()) count++;
+    for (size_t i = 0; i < numOfPlayers; i++) if (players.at(i)->isPlaying()) count++;
     if (count != activePlayers) {
         std::cout << "Error in activPlayers in play, out: " << activePlayers << " " << count << std::endl;
         exit(13);
@@ -188,8 +188,7 @@ void Table::playRound(int startPlayer, int initRaise/* = 0*/) {
      * by default, so their play is done. If round is not pre-flop, start from small blind.
      * Keep iterating until all players have either checked the last raise made, or folded.
      */
-    int prevP = -1;
-    for (int p = startPlayer; p != lastPlayerRaised || playerAction == -2; p = (p + 1) % numOfPlayers) {
+    for (size_t p = startPlayer; p != lastPlayerRaised || playerAction == -2; p = (p + 1) % numOfPlayers) {
 //        try {
 //            players.at(p)->isPlaying();
 //        } catch (std::exception &e) {
@@ -205,8 +204,8 @@ void Table::playRound(int startPlayer, int initRaise/* = 0*/) {
             if (playerAction == -1) { // Fold
                 folds++;
                 activePlayers--;
-                int count = 0;
-                for (int i = 0; i < numOfPlayers; i++) if (players.at(i)->isPlaying()) count++;
+                count = 0;
+                for (size_t i = 0; i < numOfPlayers; i++) if (players.at(i)->isPlaying()) count++;
                 if (count != activePlayers) {
                     std::cout << "Error in activPlayers in play: " << activePlayers << " " << count << std::endl;
                     exit(14);
@@ -215,12 +214,11 @@ void Table::playRound(int startPlayer, int initRaise/* = 0*/) {
                     return;
             } else if (playerAction > lastRaise) { // Raise
                 raises++;
-                lastRaise = playerAction;
+                lastRaise = (unsigned long) playerAction;
                 lastPlayerRaised = p;
             } else
                 checks++;
         }
-        prevP = p;
     }
     /*
      * For all players that have not folded, remove the amount bet, and add it to the pot.
@@ -231,7 +229,7 @@ void Table::playRound(int startPlayer, int initRaise/* = 0*/) {
      * rounds)
      */
     try {
-        for (int p = 0; p < numOfPlayers; p++)
+        for (size_t p = 0; p < numOfPlayers; p++)
             if (players.at(p)->isPlaying() && (initRaise != 0 ? players.at(p) != bigBlind : true))
                 pot += players.at(p)->anteUp(lastRaise);
     } catch (std::exception &e) {
@@ -245,13 +243,13 @@ void Table::splitPot() {
         return;
     }
     double bestHand = 0;
-    int winners = activePlayers;
+    unsigned long winners = activePlayers;
 
     std::vector<double> bestHands(activePlayers);
     try {
         // Compare hands, and determine which is the best
-        int activePlayer = 0;
-        for (int p = 0; p < numOfPlayers; p++) {
+        unsigned long activePlayer = 0;
+        for (size_t p = 0; p < numOfPlayers; p++) {
             if (players.at(p)->isPlaying()) {
                 bestHands.at(activePlayer) = players.at(p)->hand.getHandScore(communityCards);
                 if (bestHands.at(activePlayer) > bestHand)
@@ -265,7 +263,7 @@ void Table::splitPot() {
 
     try {
         // Erase all players with hands worse than the best hand from the pool of potential victors
-        for (int ap = 0; ap < activePlayers; ap++) {
+        for (size_t ap = 0; ap < activePlayers; ap++) {
             if (bestHands.at(ap) < bestHand) {
                 bestHands.at(ap) = 0.0;
                 winners--;
@@ -278,14 +276,14 @@ void Table::splitPot() {
     if (winners == 0) {
         std::cout << "FPE would be thrown" << std::endl; // TODO: if this shows, check logic... this should not happen
         std::cout << bestHand << std::endl;
-        for (int i = 0; i < bestHands.size(); i++)std::cout << bestHands.at(i) << " ";
+        for (size_t i = 0; i < bestHands.size(); i++)std::cout << bestHands.at(i) << " ";
         std::cout << std::endl;
         exit(12);
     }
 
     try {
         // Split pot amongst winners (if more than one player has the winning hand)
-        for (int wp = 0; wp < activePlayers; wp++) {
+        for (size_t wp = 0; wp < activePlayers; wp++) {
             if (bestHands.at(wp) != 0.0) {
                 players.at(wp)->collectWinnings(pot / winners);
                 if (output)
@@ -297,15 +295,15 @@ void Table::splitPot() {
     }
 }
 
-void Table::getTableInfo(std::vector<double> &tableInfo, int currPlayer) {
+void Table::getTableInfo(std::vector<double> &tableInfo, unsigned long currPlayer) {
     tableInfo.at(0) = lastRaise;
     tableInfo.at(1) = pot;
     tableInfo.at(2) = activePlayers - 1; // Alternatively use numOfPlayers
     tableInfo.at(3) = players.at(currPlayer)->getHandPotential(communityCards);
-    int opp = 0;
-    for (int p = 0; p < numOfPlayers; p++)
+    unsigned long opp = 0;
+    for (size_t p = 0; p < numOfPlayers; p++)
         try {
-            if (players.at(p)->isPlaying() && p != currPlayer) {
+            if (players.at(p)->isPlaying() && p != currPlayer) { // Write the money each player has, for NN evaluation
                 tableInfo.at(opp + 4) = players.at(p)->getMoney();
                 opp++;
             }
@@ -314,11 +312,11 @@ void Table::getTableInfo(std::vector<double> &tableInfo, int currPlayer) {
             std::cout << "Opp: " << opp << std::endl;
             std::cout << "TableInfoS: " << tableInfo.size() << std::endl;
             std::cout << "ActivePlayers: " << activePlayers << std::endl;
-            for (int i = 0; i < numOfPlayers; i++) std::cout << players.at(i)->isPlaying() << " ";
+            for (size_t i = 0; i < numOfPlayers; i++) std::cout << players.at(i)->isPlaying() << " ";
             std::cout << std::endl;
 //            for (int i = 0; i < numOfPlayers; i++) std::cout << players.at(i) << " ";
 //            std::cout << std::endl;
-            for (int i = 0; i < numOfPlayers; i++) std::cout << players.at(i)->isAllIn() << " ";
+            for (size_t i = 0; i < numOfPlayers; i++) std::cout << players.at(i)->isAllIn() << " ";
             std::cout << std::endl;
             std::cout << "Player: " << p << std::endl;
             std::cout << "Curr player: " << currPlayer << std::endl;

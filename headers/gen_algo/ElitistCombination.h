@@ -5,6 +5,9 @@
 
 class ElitistCombination : public GeneticAlgorithm {
 public:
+    ElitistCombination() = default;
+    ElitistCombination(int parents) {this->numOfParents = parents;};
+
     /**
      * Combines the parent players to generate the next generation agent. All other players copy that agent and apply
      * some random noise to it, in order to keep evolution from stagnating. The number of parents is specified when

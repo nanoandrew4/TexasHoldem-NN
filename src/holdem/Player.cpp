@@ -44,9 +44,9 @@ int Player::play(std::vector<double> tableInfo) {
     std::cout << std::endl;
 }
 
-int Player::anteUp(int ante) {
+unsigned long Player::anteUp(unsigned long ante) {
     if (ante >= money) {
-        int anteAvail = ante - money;
+        unsigned long anteAvail = ante - money;
         this->money = 0;
         allIn = true;
         return anteAvail;
@@ -56,7 +56,7 @@ int Player::anteUp(int ante) {
     }
 }
 
-void Player::collectWinnings(int winnings) {
+void Player::collectWinnings(unsigned long winnings) {
     money += winnings;
 }
 

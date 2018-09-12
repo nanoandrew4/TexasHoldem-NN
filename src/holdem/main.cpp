@@ -22,7 +22,7 @@ int main() {
         do {
             std::cout << ">> ";
             std::cin >> opt;
-        } while (opt < 0 || opt > 3);
+        } while (opt < 0 || opt > 9);
 
         std::cin.clear();
 
@@ -57,7 +57,11 @@ int main() {
                 HandTest::test();
             }
             std::cout << std::endl << std::endl;
-        } else if (opt == 0)
+        }  else if (opt == 9) { // Testing only, will be removed once testing is completed
+            NNEvolver evolver(1000, 10000, 2, 24, 0, 10, 0, 0);
+            evolver.train();
+        }
+        else if (opt == 0)
             break;
 
         std::cin.clear();

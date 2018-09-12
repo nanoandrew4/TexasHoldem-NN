@@ -5,6 +5,13 @@
 
 class PairCrossover : public GeneticAlgorithm {
 public:
+    PairCrossover() = default;
+
+    PairCrossover(int crossoverRate, int mutationRate) {
+        this->crossoverRate = crossoverRate;
+        this->mutationRate = mutationRate;
+    }
+
     /**
      * Iterates through the whole population, picking two adjacent players and performing crossover and mutation
      * operations on them.
