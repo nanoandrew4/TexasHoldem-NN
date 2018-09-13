@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <algorithm>
 #include "../../headers/test/DeckTest.h"
 #include "../../headers/holdem/Deck.h"
 
@@ -37,7 +38,9 @@ void DeckTest::test() {
         for (int c = 0; c < numExcluded; c++)
             excluded.push_back(d1.deal());
 
-        Hand::quicksortByVal(excluded, 0, excluded.size() - 1); // Make it easier on the excluder in Deck
+        std::sort(excluded.begin(), excluded.end(), [](Card *left, Card *right) -> bool {
+            return left->getCardValue() < right->getCardValue();
+        });
         Deck d2(excluded);
         for (int c = 0; c < d2.getCardsInDeck(); c++) {
             Card *card = d2.deal();

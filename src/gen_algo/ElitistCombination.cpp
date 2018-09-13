@@ -9,11 +9,11 @@ void ElitistCombination::evolve(std::vector<AIPlayer *> &players, bool lastGen) 
     for (int p = 0; p < numOfParents; p++)
         parents.at(p) = players.at(p);
 
-    int layers = parents.at(0)->getNN()->neuronsPerLayer.size();
-    const std::vector<int> neuronsPerLayer = parents.at(0)->getNN()->neuronsPerLayer;
+    int layers = parents.at(0)->getNN()->numOfLayers;
+    const std::array<unsigned long, NeuralNetwork::numOfLayers> neuronsPerLayer = parents.at(0)->getNN()->getNeuronsPerLayer();
     for (int l = 0; l < layers - 1; l++)
-        for (int n = 0; n < parents.at(0)->getNN()->neuronsPerLayer.at(l); n++)
-            for (int nn = 0; nn < parents.at(0)->getNN()->neuronsPerLayer.at(l + 1); nn++) {
+        for (int n = 0; n < parents.at(0)->getNN()->getNeuronsPerLayer().at(l); n++)
+            for (int nn = 0; nn < parents.at(0)->getNN()->getNeuronsPerLayer().at(l + 1); nn++) {
                 double weight = 0;
                 for (int p = 0; p < numOfParents; p++)
                     weight += parents.at(p)->getNN()->getWeightaAt(l, n, nn);

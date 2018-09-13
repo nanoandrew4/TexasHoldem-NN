@@ -3,6 +3,7 @@
 
 #include "Card.h"
 #include <vector>
+#include <array>
 
 /**
  * Types of hands that can be obtained in Texas Hold'em, from worst to best.
@@ -41,15 +42,6 @@ public:
      */
     double getHandScore(std::vector<Card *> communityCards);
 
-    /**
-     * Sorts a vector of card pointers by their value, in descending order.
-     *
-     * @param cards Vector of Card pointers
-     * @param lPiv Left-most point to sort array from
-     * @param rPiv Right-most point to sort array from
-     */
-    static void quicksortByVal(std::vector<Card *> &cards, int lPiv, int rPiv);
-
 private:
     /**
      * Checks vector of cards for four of a kind, full house, three of a kind, two pairs or a pair.
@@ -66,7 +58,7 @@ private:
      * @param cards Vector of card pointers to evaluate
      * @param results Integer vector of size 6, where the results of this check are written to
      */
-    void straightCheck(std::vector<Card *> cards, std::vector<int> &results);
+    void straightCheck(std::vector<Card *> cards, std::array<int, 8> &results);
 
     /**
      * Determines if a vector of Card pointers has a flush. If it does, it writes 9 numbers to the 'results'
@@ -76,7 +68,7 @@ private:
      * @param cards Vector of Card pointers to check for flush
      * @param results Integer vector of size 9, where the results of this check are written to
      */
-    void flushCheck(std::vector<Card *> cards, std::vector<int> &results);
+    void flushCheck(std::vector<Card *> cards, std::array<int, 8> &results);
 };
 
 #endif //TEXAS_HOLDEM_NN_HAND_H

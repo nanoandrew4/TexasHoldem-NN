@@ -32,7 +32,7 @@ public:
      *
      * @return Integer representing value assigned to this card.
      */
-    int getCardValue() const { return cardValue; }
+    unsigned int getCardValue() const { return cardValue; }
 
     /**
      * Returns the suit assigned to this card.
@@ -43,7 +43,7 @@ public:
 
 private:
     Suit suit;
-    int cardValue;
+    unsigned int cardValue;
 };
 
 #endif //TEXAS_HOLDEM_NN_CARD_H

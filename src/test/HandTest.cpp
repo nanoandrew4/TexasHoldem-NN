@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include "../../headers/test/HandTest.h"
 #include "../../headers/holdem/Hand.h"
 #include "../../headers/holdem/Deck.h"
@@ -264,7 +265,9 @@ void HandTest::testHighCard() {
 void HandTest::testFail(std::string testName, std::vector<Card *> pocket, std::vector<Card *> commCards) {
     std::cout << "Hand -> " << testName << " test failed... Cards: ";
     commCards.insert(commCards.end(), pocket.begin(), pocket.end());
-    Hand::quicksortByVal(commCards, 0, commCards.size() - 1);
+    std::sort(commCards.begin(), commCards.end(), [](Card *left, Card *right) -> bool {
+        return left->getCardValue() < right->getCardValue();
+    });
     Hand::displayHand(commCards);
 }
 
