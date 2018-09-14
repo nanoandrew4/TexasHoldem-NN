@@ -2,7 +2,7 @@
 #include <iostream>
 #include "../../headers/holdem/Card.h"
 
-Card::Card(Suit suit, int cardVal) {
+Card::Card(Suit suit, unsigned int cardVal) {
     // Force quit if erroneous card data is encountered
     if (cardVal > 14 || cardVal < 2) {
         std::cout << "Bad card value: " << cardVal << std::endl;

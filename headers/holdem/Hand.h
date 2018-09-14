@@ -58,7 +58,7 @@ private:
      * @param cards Vector of card pointers to evaluate
      * @param results Integer vector of size 6, where the results of this check are written to
      */
-    void straightCheck(std::vector<Card *> cards, std::array<int, 8> &results);
+    void straightCheck(std::vector<Card *> cards, std::array<unsigned long, 8> &results);
 
     /**
      * Determines if a vector of Card pointers has a flush. If it does, it writes 9 numbers to the 'results'
@@ -68,7 +68,7 @@ private:
      * @param cards Vector of Card pointers to check for flush
      * @param results Integer vector of size 9, where the results of this check are written to
      */
-    void flushCheck(std::vector<Card *> cards, std::array<int, 8> &results);
+    void flushCheck(std::vector<Card *> cards, std::array<unsigned long, 8> &results);
 };
 
 #endif //TEXAS_HOLDEM_NN_HAND_H

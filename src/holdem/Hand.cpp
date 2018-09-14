@@ -35,7 +35,7 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
 	// Check for flushCheck, straightCheck and # of cards. All else can be determined from this.
 	double score = 0, valScore = 0;
 
-	int numOfCards = (int) communityCards.size() + 2; // Community cards plus pocket (always 2)
+	unsigned long numOfCards = communityCards.size() + 2; // Community cards plus pocket (always 2)
 
 	// Combine hand and community cards into one vector, and sort in descending order by value
 	std::vector<Card *> cards(pocket.size() + communityCards.size());
@@ -48,13 +48,14 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
 		return left->getCardValue() < right->getCardValue();
 	});
 
-	std::array<int, 8> straightRes = {};
+	std::array<unsigned long, 8> straightRes = {};
 	straightCheck(cards, straightRes);
 
-	std::array<int, 8> flushRes = {};
+	std::array<unsigned long, 8> flushRes = {};
 	flushCheck(cards, flushRes);
 
-	if (straightRes.at(0) == 1 && flushRes.at(0) != -1) // Verify straight flush (and royal flush)
+	// Verify straight flush (and royal flush)
+	if (straightRes.at(0) == 1 && flushRes.at(0) != std::numeric_limits<unsigned long>::max())
 		for (unsigned long seqStart = 0; seqStart < 4; seqStart++) {
 			unsigned long suit = flushRes.at(0), matches = flushRes.at(seqStart + 1) == suit ? 1 : 0;
 			for (size_t seqCard = seqStart + 1; seqCard < 9 && matches < 5; seqCard++)
@@ -73,7 +74,7 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
 
 	if (flushRes.at(0) != -1) { // Flush
 		score = FLUSH; // Base score
-		int suit = flushRes.at(0), matches = 0;
+		unsigned long suit = flushRes.at(0), matches = 0;
 		for (size_t c = 0; c < numOfCards; c++) // All cards in flush
 			if (cards.at(c)->getSuit() == suit)
 				score += cards.at(c)->getCardValue() / (20.0 * pow(10, matches++));
@@ -89,18 +90,18 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
 
 double Hand::valComboCheck(std::vector<Card *> cards) {
 	double score = 0;
-	std::vector<int> vals(15, 0);
+	std::array<int, 15> vals {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 	// Count how many cards have any given value
 	for (auto &card : cards)
 		vals.at(card->getCardValue())++;
 
 	// Two card values of most interest (read as 'Card Of Interest'). First element is more interesting than the second.
-	std::vector<unsigned long> coi(2, 0);
+	std::array<unsigned long, 2> coi {{0, 0}};
 
 	// Runs through all values and determines which card combinations will give the best hands.
-	for (size_t c = 2; c < 15; c++)
-		for (size_t cois = 0; cois < 2; cois++)
+	for (size_t c = 2; c < 15; ++c)
+		for (size_t cois = 0; cois < 2; ++cois)
 			if (vals.at(c) >= vals.at(coi.at(cois))) {
 				if (cois == 0) {
 					coi.at(1) = coi.at(0);
@@ -110,11 +111,11 @@ double Hand::valComboCheck(std::vector<Card *> cards) {
 					coi.at(1) = c;
 			}
 
-	std::vector<int> kickers(3, 0);
+	std::array<int, 3> kickers {{0, 0, 0}};
 
 	if (coi.at(0) != 3 || coi.at(1) != 2) { // Gets kickers unless Full House, which does not have any
 		size_t kicker = 0;
-		for (size_t c = 0; c < cards.size() && kicker < 3; c++)
+		for (size_t c = 0; c < cards.size() && kicker < 3; ++c)
 			if (cards.at(c)->getCardValue() != coi.at(0) && cards.at(c)->getCardValue() != coi.at(1))
 				kickers.at(kicker++) = cards.at(c)->getCardValue();
 	}
@@ -145,7 +146,7 @@ double Hand::valComboCheck(std::vector<Card *> cards) {
 	return score;
 }
 
-void Hand::straightCheck(std::vector<Card *> cards, std::array<int, 8> &results) {
+void Hand::straightCheck(std::vector<Card *> cards, std::array<unsigned long, 8> &results) {
 	unsigned long numOfCards = cards.size();
 	if (numOfCards < 5)
 		return;
@@ -177,13 +178,13 @@ void Hand::straightCheck(std::vector<Card *> cards, std::array<int, 8> &results)
 	}
 }
 
-void Hand::flushCheck(std::vector<Card *> cards, std::array<int, 8> &results) {
-	results.at(0) = -1;
+void Hand::flushCheck(std::vector<Card *> cards, std::array<unsigned long, 8> &results) {
+	results.at(0) = std::numeric_limits<unsigned long>::max();
 
 	if (cards.size() < 5)
 		return;
 
-	std::vector<int> suits(4, 0); // Holds number of appearances of each suit
+	std::vector<unsigned long> suits(4, 0); // Holds number of appearances of each suit
 
 	// Count each suit and add it to the results array
 	for (size_t c = 0; c < cards.size(); c++) {
@@ -191,7 +192,7 @@ void Hand::flushCheck(std::vector<Card *> cards, std::array<int, 8> &results) {
 		results.at(c + 1) = cards.at(c)->getSuit();
 	}
 
-	for (int s = 0; s < 4; s++) {
+	for (size_t s = 0; s < 4; s++) {
 		if (suits.at(s) > 4) {
 			results.at(0) = s;
 			return;

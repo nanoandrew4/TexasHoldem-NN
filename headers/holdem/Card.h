@@ -18,7 +18,7 @@ public:
      * @param suit Suit the new card belongs to (see Suit enum)
      * @param cardVal Value of card ([2-14])
      */
-    Card(Suit suit, int cardVal);
+    Card(Suit suit, unsigned int cardVal);
 
     /**
      * Returns the first letter of the suit name assigned to this card.
