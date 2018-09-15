@@ -23,7 +23,7 @@ public:
     ~Hand();
 
     // Cards held in this hand (2)
-    std::vector<Card *> pocket;
+    std::array<Card *, 2> pocket;
 
     /**
      * Displays a vector of cards, showing their value and suit.

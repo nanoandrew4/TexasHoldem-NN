@@ -264,7 +264,7 @@ void HandTest::testHighCard() {
 		}
 }
 
-void HandTest::testFail(std::string testName, std::vector<Card *> pocket, std::vector<Card *> commCards) {
+void HandTest::testFail(const std::string &testName, std::array<Card *, 2> pocket, std::vector<Card *> commCards) {
 	std::cout << "Hand -> " << testName << " test failed... Cards: ";
 	commCards.insert(commCards.end(), pocket.begin(), pocket.end());
 	std::sort(commCards.begin(), commCards.end(), [](Card *left, Card *right) -> bool {

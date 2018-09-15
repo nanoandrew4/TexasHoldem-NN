@@ -3,8 +3,8 @@
 #include "../../headers/holdem/Hand.h"
 
 Hand::Hand(Card *c1, Card *c2) {
-	pocket.push_back(c1);
-	pocket.push_back(c2);
+	pocket.at(0) = c1;
+	pocket.at(1) = c2;
 }
 
 Hand::~Hand() = default;
@@ -28,7 +28,7 @@ void Hand::displayHand(std::vector<Card *> cards) {
 }
 
 void Hand::displayHand() {
-	displayHand(pocket);
+	displayHand({pocket.at(0), pocket.at(1)});
 }
 
 double Hand::getHandScore(std::vector<Card *> communityCards) {
@@ -45,7 +45,7 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
 		cards.at(c + 2) = communityCards.at(c);
 
 	std::sort(cards.begin(), cards.end(), [](Card *left, Card *right) -> bool {
-		return left->getCardValue() < right->getCardValue();
+		return left->getCardValue() > right->getCardValue();
 	});
 
 	std::array<unsigned long, 8> straightRes = {};
@@ -62,7 +62,7 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
 				if (cards.at(seqCard % numOfCards)->getCardValue() ==
 				    straightRes.at((seqStart + matches) % numOfCards + 1) &&
 				    flushRes.at((seqCard % numOfCards) + 1) == suit)
-					matches++;
+					++matches;
 			if (matches == 5) {
 				//      Base         Highest card in straight flush
 				score = STR_FLUSH + (cards.at(seqStart)->getCardValue() / 20.0);
@@ -94,7 +94,7 @@ double Hand::valComboCheck(std::vector<Card *> cards) {
 
 	// Count how many cards have any given value
 	for (auto &card : cards)
-		vals.at(card->getCardValue())++;
+		++vals.at(card->getCardValue());
 
 	// Two card values of most interest (read as 'Card Of Interest'). First element is more interesting than the second.
 	std::array<unsigned long, 2> coi {{0, 0}};
@@ -180,14 +180,15 @@ void Hand::straightCheck(std::vector<Card *> cards, std::array<unsigned long, 8>
 
 void Hand::flushCheck(std::vector<Card *> cards, std::array<unsigned long, 8> &results) {
 	results.at(0) = std::numeric_limits<unsigned long>::max();
+	unsigned long numOfCards = cards.size();
 
-	if (cards.size() < 5)
+	if (numOfCards < 5)
 		return;
 
-	std::vector<unsigned long> suits(4, 0); // Holds number of appearances of each suit
+	std::vector<unsigned long> suits(4, 0); // Holds number of appearanc es of each suit
 
 	// Count each suit and add it to the results array
-	for (size_t c = 0; c < cards.size(); c++) {
+	for (size_t c = 0; c < numOfCards; c++) {
 		suits.at(cards.at(c)->getSuit())++;
 		results.at(c + 1) = cards.at(c)->getSuit();
 	}

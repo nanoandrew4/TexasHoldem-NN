@@ -6,7 +6,7 @@ static unsigned long x = 123456789, y = 362436069, z = 521288629; // Used in XOR
 
 Deck::Deck(bool autoReShuffle) {
 	deck.resize(defaultSize, Card((Suit) 0, 2));
-	for (int c = 0; c < defaultSize; ++c) deck.at(c) = (Card((Suit) ((c / 13)), (c % 13) + 2));
+	for (unsigned int c = 0; c < defaultSize; ++c) deck.at(c) = (Card((Suit) ((c / 13)), (c % 13) + 2));
 	pos = defaultSize;
 	this->autoReShuffle = autoReShuffle;
 	shuffle();
@@ -16,7 +16,7 @@ Deck::Deck(std::vector<Card *> cards) {
 	size_t cardsEliminated = 0;
 	deck.resize(52, Card((Suit) 0, 2));
 
-	for (int c = 51; c >= 0; --c) {
+	for (unsigned int c = 51; c < 0xffff; --c) { // Wait for underflow, then stop
 		if (cardsEliminated >= cards.size() || cards.at(cardsEliminated)->getCardValue() != (c % 13) + 2 ||
 		    cards.at(cardsEliminated)->getSuit() != (Suit) ((c / 13)))
 			deck.at(c) = Card((Suit) ((c / 13)), (c % 13) + 2);
@@ -63,9 +63,11 @@ void Deck::shuffle() {
 	size_t deckSize = deck.size();
 	size_t cardsToShuffle = deckSize / 2;
 
+	unsigned long newPos;
+	Card tmp = deck.at(0);
 	for (size_t i = 0; i < cardsToShuffle; ++i) {
-		unsigned long newPos = xorshf96() % deckSize;
-		Card tmp = deck.at(i);
+		newPos = xorshf96() % deckSize;
+		tmp = deck.at(i);
 		deck.at(i) = deck.at(newPos);
 		deck.at(newPos) = tmp;
 	}
