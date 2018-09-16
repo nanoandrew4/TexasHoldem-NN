@@ -77,7 +77,7 @@ public:
     /**
      * For use in AIPlayer. Does nothing in Player implementation.
      */
-    virtual double getHandPotential(std::vector<Card *> communityCards) {};
+    virtual double getHandPotential(std::vector<Card *> communityCards) { return 0; };
 
 private:
     static const int initMoney = 10000;

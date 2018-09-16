@@ -7,7 +7,9 @@
 
 class GeneticAlgorithm {
 public:
-    GeneticAlgorithm() { srand(time(NULL)); };
+    GeneticAlgorithm() { srand(time(nullptr)); };
+
+    virtual ~GeneticAlgorithm() = default;
 
     /**
      * Evolution algorithm. Each implementation of 'GeneticAlgorithm' should have its own documentation regarding the

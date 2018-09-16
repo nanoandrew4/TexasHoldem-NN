@@ -46,10 +46,10 @@ public:
 private:
 	std::vector<Card> deck;
 
-	const static unsigned long defaultSize = 52;
+	const static std::uint8_t defaultSize = 52;
 
 	// Position to read card value from (allows simulating cards being drawn)
-	size_t pos;
+	std::uint8_t pos;
 
 	bool autoReShuffle;
 

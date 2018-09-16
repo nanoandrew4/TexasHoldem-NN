@@ -35,13 +35,15 @@ int Player::play(std::vector<double> tableInfo) {
         case 'c':
             if (money > 0 || allIn)
                 return 0;
-            return -1; // Force fold if cannot afford to continue
+//            return -1; // Force fold if cannot afford to continue
         case 'f':
             playing = false;
             return -1;
     }
 
     std::cout << std::endl;
+
+    return -2; // Should never happen
 }
 
 unsigned long Player::anteUp(unsigned long ante) {

@@ -18,7 +18,7 @@ public:
      * @param suit Suit the new card belongs to (see Suit enum)
      * @param cardVal Value of card ([2-14])
      */
-    Card(Suit suit, unsigned int cardVal);
+    Card(Suit suit, std::uint8_t cardVal);
 
     /**
      * Returns the first letter of the suit name assigned to this card.
@@ -32,7 +32,7 @@ public:
      *
      * @return Integer representing value assigned to this card.
      */
-    unsigned int getCardValue() const { return cardValue; }
+    std::uint8_t  getCardValue() const { return cardValue; }
 
     /**
      * Returns the suit assigned to this card.
@@ -43,7 +43,7 @@ public:
 
 private:
     Suit suit;
-    unsigned int cardValue;
+    std::uint8_t cardValue;
 };
 
 #endif //TEXAS_HOLDEM_NN_CARD_H

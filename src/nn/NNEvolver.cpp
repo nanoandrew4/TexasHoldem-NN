@@ -112,11 +112,12 @@ void NNEvolver::train() {
 
 	std::vector<std::thread> threads(numOfThreads);
 	size_t thread = 0;
-	for (int startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
-		int startTable = startPopPos == 0 ? 0 : (startPopPos + playersPerTable) / playersPerTable;
+	for (unsigned long startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
+		unsigned long startTable = startPopPos == 0 ? 0 : (startPopPos + playersPerTable) / playersPerTable;
 		unsigned long endTable =
 				(startPopPos + popPerThread > population ? population : startPopPos + popPerThread) / playersPerTable;
-		threads.at(thread++) = std::thread(&NNEvolver::trainerThread, this, thread, startTable, endTable);
+		threads.at(thread) = std::thread(&NNEvolver::trainerThread, this, thread, startTable, endTable);
+		++thread;
 	}
 
 	for (size_t t = 0; t < numOfThreads; ++t)

@@ -203,7 +203,7 @@ void HandTest::testTwoPair() {
 				for (size_t ec = 0; ec < extraCards; ec++) {
 					while ((card = d.deal())->getSuit() == commCards.at(ec)->getSuit() || // Ensures only two pairs
 					       card->getCardValue() == pairOneVal || card->getCardValue() == (pairTwoVal + 2) % 13 + 2 ||
-					       abs(card->getCardValue() - commCards.at(ec + 1)->getCardValue()) < 4);
+					       abs((int) card->getCardValue() - (int) commCards.at(ec + 1)->getCardValue()) < 4);
 					commCards.at(2 + ec) = card;
 				}
 

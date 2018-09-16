@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 #include "../../headers/holdem/Deck.h"
 #include "../../headers/holdem/Player.h"
 #include "../../headers/holdem/Table.h"
@@ -8,7 +9,7 @@
 
 int main(int argc, char *argv[]) {
 	if (argc > 1) {
-		NNEvolver evolver(1000, 1000, 2, 24, 0, 10, 0, 0);
+		NNEvolver evolver(1000, 1000, 2, std::thread::hardware_concurrency(), 0, 10, 0, 0);
 		evolver.train();
 		return 0;
 	}
