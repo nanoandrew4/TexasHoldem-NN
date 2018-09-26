@@ -98,10 +98,10 @@ private:
 	 *
 	 * @param input Inputs to use for propagation
 	 */
-	void forward(std::vector<double> input);
+	void forward(const std::vector<double> &input);
 
 	// Sigmoid function (standard in NN implementations)
-	double sigmoid(double d);
+	double sigmoid(const double d);
 
 	// Inverse sigmoid (reverses the sigmoid operation, used for raises)
 	double invSigmoid(double d);

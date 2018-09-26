@@ -68,7 +68,7 @@ private:
 	 * @return Double value representing the hand potential, which is the average hand score on the next turn minus the
 	 *         current hand score
 	 */
-	double getHandPotential(std::vector<Card *> communityCards);
+	double getHandPotential(const std::vector<Card *> &communityCards);
 
 	NeuralNetwork *nn;
 };

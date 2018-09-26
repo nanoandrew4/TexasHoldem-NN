@@ -110,7 +110,7 @@ NeuralNetwork *NeuralNetwork::deserialize(const std::string &fileName) {
 	return nNet;
 }
 
-double NeuralNetwork::sigmoid(double d) {
+double NeuralNetwork::sigmoid(const double d) {
 	return (1.0 / (1.0 + exp(-d)));
 }
 
@@ -118,7 +118,7 @@ double NeuralNetwork::invSigmoid(double d) {
 	return -log((1 / d) - 1);
 }
 
-void NeuralNetwork::forward(std::vector<double> input) {
+void NeuralNetwork::forward(const std::vector<double> &input) {
 
 	// Zero all activations in preparation for data ingestion
 	for (size_t l = 0; l < neuronsPerLayer.size(); l++)

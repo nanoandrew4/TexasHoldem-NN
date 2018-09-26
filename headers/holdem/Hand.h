@@ -40,7 +40,7 @@ public:
      *
      * @param communityCards Vector containing Card pointers that are face up on the table
      */
-    double getHandScore(std::vector<Card *> communityCards);
+    double getHandScore(const std::vector<Card *> &communityCards);
 
 private:
     /**
@@ -49,7 +49,7 @@ private:
      *
      * @param cards Vector of Card pointers to evaluate
      */
-    double valComboCheck(std::vector<Card *> cards);
+    double valComboCheck(const std::vector<Card *> &cards);
 
     /**
      * TODO: REWRITE
@@ -59,7 +59,7 @@ private:
      * @param cards Vector of card pointers to evaluate
      * @param results Integer vector of size 6, where the results of this check are written to
      */
-    void straightCheck(std::vector<Card *> cards);
+    void straightCheck(const std::vector<Card *> &cards);
 
     /**
      * TODO: REWRITE
@@ -70,7 +70,7 @@ private:
      * @param cards Vector of Card pointers to check for flush
      * @param results Integer vector of size 9, where the results of this check are written to
      */
-    void flushCheck(std::vector<Card *> cards);
+    void flushCheck(const std::vector<Card *> &cards);
 
 	std::array<std::uint8_t, 8> straightRes = {};
 	std::array<std::uint8_t, 8> flushRes = {};

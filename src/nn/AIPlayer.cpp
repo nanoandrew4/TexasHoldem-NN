@@ -40,7 +40,7 @@ int AIPlayer::play(std::vector<double> tableInfo) {
 	exit(1);
 }
 
-double AIPlayer::getHandPotential(std::vector<Card *> communityCards) {
+double AIPlayer::getHandPotential(const std::vector<Card *> &communityCards) {
 	double currScore = hand.getHandScore(communityCards);
 
 	unsigned long numOfCards = communityCards.size() + 2, cardsToCheck = 26;
@@ -61,7 +61,7 @@ double AIPlayer::getHandPotential(std::vector<Card *> communityCards) {
 	cards.push_back(nullptr);
 
 	double avgPotentialScore = 0;
-	for (int c = 0; c < cardsToCheck; c++) { // Don't check all hands, or performance drops exponentially.
+	for (int c = 0; c < cardsToCheck; ++c) { // Don't check all hands, or performance drops exponentially.
 		cards.at(numOfCards) = deck.deal();
 		avgPotentialScore += (hand.getHandScore(communityCards));
 	}

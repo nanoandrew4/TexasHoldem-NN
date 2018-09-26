@@ -31,7 +31,7 @@ void Hand::displayHand() {
 	displayHand({pocket.at(0), pocket.at(1)});
 }
 
-double Hand::getHandScore(std::vector<Card *> communityCards) {
+double Hand::getHandScore(const std::vector<Card *> &communityCards) {
 	// Check for flushCheck, straightCheck and # of cards. All else can be determined from this.
 	double score = 0, valScore = 0;
 
@@ -67,6 +67,11 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
 			}
 		}
 
+	/*
+	 * Check four of a kind, full house, three of a kind, two pair and pair.
+	 * Since a flush or a straight are not possible when a four of a kind or a full house are attained, the conditional
+	 * statements below won't affect those hands (which rank higher than a flush or a straight)
+	 */
 	valScore = valComboCheck(cards);
 
 	if (flushRes.at(0) != 0xff) { // Flush
@@ -85,7 +90,7 @@ double Hand::getHandScore(std::vector<Card *> communityCards) {
 	return score > valScore ? score : valScore;
 }
 
-double Hand::valComboCheck(std::vector<Card *> cards) {
+double Hand::valComboCheck(const std::vector<Card *> &cards) {
 	double score = 0;
 
 	// Count how many cards have any given value
@@ -138,7 +143,7 @@ double Hand::valComboCheck(std::vector<Card *> cards) {
 	return score;
 }
 
-void Hand::straightCheck(std::vector<Card *> cards) {
+void Hand::straightCheck(const std::vector<Card *> &cards) {
 	std::uint8_t numOfCards = static_cast<uint8_t>(cards.size());
 	if (numOfCards < 5)
 		return;
@@ -170,7 +175,7 @@ void Hand::straightCheck(std::vector<Card *> cards) {
 	}
 }
 
-void Hand::flushCheck(std::vector<Card *> cards) {
+void Hand::flushCheck(const std::vector<Card *> &cards) {
 	flushRes.at(0) = 0xff;
 	std::uint8_t numOfCards = static_cast<uint8_t>(cards.size());
 
