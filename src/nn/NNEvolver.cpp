@@ -35,7 +35,8 @@ NNEvolver::NNEvolver() {
 
 // For testing purposes only
 NNEvolver::NNEvolver(unsigned long population, unsigned long gensToeEvolve, unsigned long itersPerGen,
-                     unsigned long numOfThreads, int evolStrat, int parents, int crossoverRate, int mutationRate) {
+                     unsigned long numOfThreads, int evolStrat, unsigned long parents, int crossoverRate,
+                     int mutationRate) {
 	this->population = population;
 	this->gensToEvolve = gensToeEvolve;
 	this->itersPerGen = itersPerGen;
@@ -143,8 +144,6 @@ void NNEvolver::train() {
 		delete players.at(t);
 }
 
-static auto start = std::chrono::high_resolution_clock::now();
-
 void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTable) {
 	for (unsigned long currGen = 0; currGen < gensToEvolve; ++currGen) {
 		threadGens.at(threadNum) = currGen;
@@ -189,22 +188,15 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 				return left->getMoney() > right->getMoney();
 			});
 
-			richestPlayer += players.at(0)->getMoney();
 			if (currGen % 100 == 0 && currGen > 0) {
 				std::cout << "Gen " << currGen - 100 << " -> " << currGen << " stats:\n";
 				std::cout << "Rounds played: " << rounds / 100.0 << '\n';
 				std::cout << "Times raised: " << raises / 100.0 << '\n';
 				std::cout << "Times checked: " << checks / 100.0 << '\n';
 				std::cout << "Times folded: " << folds / 100.0 << '\n';
-				std::cout << "Richest player money: " << richestPlayer / 100.0 << "\n\n";
+				std::cout << "Richest player money: " << players.at(0)->getMoney() << "\n\n";
 
-				auto end = std::chrono::high_resolution_clock::now();
-				long time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-				start = end;
-
-				std::cout << "Time taken to evolve 100 gens: " << (time / 100.0) << "ms\n";
-
-				rounds = raises = checks = folds = richestPlayer = 0;
+				rounds = raises = checks = folds = 0;
 			}
 
 			// Genetic algorithm for evolution of population

@@ -1,12 +1,14 @@
 #include "../../headers/gen_algo/PairCrossover.h"
 
+std::mt19937_64 PairCrossover::mt_rand(std::random_device().operator()());
+
 void PairCrossover::evolve(std::vector<AIPlayer *> &players, bool lastGen) {
 	if (lastGen)
 		return;
 
 	size_t population = players.size();
 
-	std::array<unsigned long, NeuralNetwork::numOfLayers> neuronsPerLayer = players.at(
+	std::array<std::uint8_t, NeuralNetwork::numOfLayers> neuronsPerLayer = players.at(
 			0)->getNN()->getNeuronsPerLayer();
 	for (size_t pop = 0; pop < population - 1; pop += 2) {
 		for (size_t layer = 0; layer < neuronsPerLayer.size() - 1; layer++) {
@@ -17,11 +19,11 @@ void PairCrossover::evolve(std::vector<AIPlayer *> &players, bool lastGen) {
 					double connSwapNetwork1 = players.at(pop)->getNN()->getWeightaAt(layer, neuron, nextLayerNeuron);
 					double connSwapNetwork2 = players.at(pop + 1)->getNN()->getWeightaAt(layer, neuron,
 					                                                                     nextLayerNeuron);
-					if (rand() % 1000 < 20) // % chance of mutation
-						connSwapNetwork1 += ((rand() % 10) / (rand() % 999 + 1) - (1 / 500));
-					if (rand() % 1000 < 20) // % chance of mutation
-						connSwapNetwork2 += ((rand() % 10) / (rand() % 999 + 1) - (1 / 500));
-					if (rand() % 1000 < 700) { // % chance of crossover
+					if (mt_rand() % 1000 < 20) // % chance of mutation
+						connSwapNetwork1 += ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
+					if (mt_rand() % 1000 < 20) // % chance of mutation
+						connSwapNetwork2 += ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
+					if (mt_rand() % 1000 < 700) { // % chance of crossover
 						players.at(pop)->getNN()->setWeightAt(layer, neuron, nextLayerNeuron, connSwapNetwork2);
 						players.at(pop + 1)->getNN()->setWeightAt(layer, neuron, nextLayerNeuron, connSwapNetwork1);
 					}

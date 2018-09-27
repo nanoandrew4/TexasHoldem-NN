@@ -6,7 +6,10 @@
 
 class NeuralNetwork {
 public:
-	static const unsigned int numOfLayers = 4;
+	/**
+	 * Number of layers in the neural network, should be updated alongside 'neuronsPerLayer'.
+	 */
+	static const std::uint8_t numOfLayers = 3;
 
 	/**
 	 * Initializes a network with 'layers' layers and 'n' neurons per layer, where 'n' is each element of
@@ -16,9 +19,9 @@ public:
 	 * @param neuronsPerLayer Array of integers representing the desired neurons at each layer
 	 * @param randomize Whether to randomize the initial weights or leave them at initialized values (0)
 	 */
-	NeuralNetwork(bool randomize);
+	explicit NeuralNetwork(bool randomize);
 
-	NeuralNetwork(std::vector<unsigned long>, bool randomize);
+	NeuralNetwork(std::vector<std::uint8_t> neuronsPerLayer, bool randomize);
 
 	~NeuralNetwork();
 
@@ -84,10 +87,14 @@ public:
 
 	constexpr static unsigned long getNumOfLayers() { return numOfLayers; }
 
-	const static std::array<unsigned long, NeuralNetwork::numOfLayers> getNeuronsPerLayer() { return neuronsPerLayer; };
+	const static std::array<std::uint8_t, NeuralNetwork::numOfLayers> getNeuronsPerLayer() { return neuronsPerLayer; };
 
 private:
-	static std::array<unsigned long, numOfLayers> neuronsPerLayer;
+	/**
+	 * For our purposes, the number of neurons in a layer will not exceed 128 because more connections doesn't improve
+	 * the networks performance, and for poker networks far less than 128 neurons per layer are necessary.
+	 */
+	static std::array<std::uint8_t, numOfLayers> neuronsPerLayer;
 
 	// Activation values and weights that compose the network
 	std::vector<std::vector<double>> activ;
@@ -105,6 +112,8 @@ private:
 
 	// Inverse sigmoid (reverses the sigmoid operation, used for raises)
 	double invSigmoid(double d);
+
+	static std::mt19937_64 mt_rand;
 };
 
 
