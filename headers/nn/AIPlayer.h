@@ -39,7 +39,7 @@ public:
 	 * @param tableInfo Information to be used as inputs for the neural network
 	 * @return Action taken by agent (-1 -> fold, 0 -> call, x > 0 -> raise by 'x')
 	 */
-	int play(std::vector<double> tableInfo);
+	int play(const std::vector<double> &tableInfo);
 
 	/**
 	 * Sets this agent's neural network, and deletes the old one.

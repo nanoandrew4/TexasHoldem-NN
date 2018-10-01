@@ -155,7 +155,7 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 
 		// Play all tables
 		for (size_t t = startTable; t < endTable; ++t) {
-			std::vector<Player *> tablePlayers((unsigned long) playersPerTable /* Will always be less than 10 */);
+			std::vector<Player *> tablePlayers((unsigned long) playersPerTable /* Will always be less than 11 */);
 			for (size_t p = 0; p < playersPerTable; ++p)
 				tablePlayers.at(p) = players.at(t * playersPerTable + p);
 			Table table(tablePlayers);
@@ -190,10 +190,10 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 
 			if (currGen % 100 == 0 && currGen > 0) {
 				std::cout << "Gen " << currGen - 100 << " -> " << currGen << " stats:\n";
-				std::cout << "Rounds played: " << rounds / 100.0 << '\n';
-				std::cout << "Times raised: " << raises / 100.0 << '\n';
-				std::cout << "Times checked: " << checks / 100.0 << '\n';
-				std::cout << "Times folded: " << folds / 100.0 << '\n';
+				std::cout << "Rounds played: " << rounds / (double) 100 << '\n';
+				std::cout << "Times raised: " << raises / (double) 100 << '\n';
+				std::cout << "Times checked: " << checks / (double) 100 << '\n';
+				std::cout << "Times folded: " << folds / (double) 100 << '\n';
 				std::cout << "Richest player money: " << players.at(0)->getMoney() << "\n\n";
 
 				rounds = raises = checks = folds = 0;

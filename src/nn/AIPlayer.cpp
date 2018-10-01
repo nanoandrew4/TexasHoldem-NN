@@ -21,22 +21,24 @@ AIPlayer::~AIPlayer() {
 	delete nn;
 }
 
-int AIPlayer::play(std::vector<double> tableInfo) {
+int AIPlayer::play(const std::vector<double> &tableInfo) {
 	int action = nn->getAction(tableInfo);
 	if ((action == -1 && !allIn) || (money == 0 && !allIn)) {
 		playing = false;
 		if (Table::output)
 			std::cout << "AI FOLDED" << std::endl;
 		return -1;
-	} else if (action == 0 || action <= tableInfo.at(0) || money < action || allIn) {
+	} else if ((action <= tableInfo.at(0) && money > 0) || allIn) {
 		if (Table::output)
 			std::cout << "AI CHECKED" << std::endl;
 		return 0;
-	} else if (action >= 1 && action > tableInfo.at(0) && money >= action) {
+	} else if (action > tableInfo.at(0) && money >= action) {
 		if (Table::output)
 			std::cout << "AI RAISED" << std::endl;
 		return action;
 	}
+
+	std::cout << "NN Action determination failed... " << std::endl;
 	exit(1);
 }
 
@@ -48,9 +50,9 @@ double AIPlayer::getHandPotential(const std::vector<Card *> &communityCards) {
 		return currScore;
 
 	std::vector<Card *> cards(numOfCards);
-	for (size_t c = 0; c < 2; c++)
+	for (size_t c = 0; c < 2; ++c)
 		cards.at(c) = hand.pocket.at(c);
-	for (size_t cc = 0; cc < numOfCards - 2; cc++)
+	for (size_t cc = 0; cc < numOfCards - 2; ++cc)
 		cards.at(cc + 2) = communityCards.at(cc);
 
 	std::sort(cards.begin(), cards.end(), [](Card *left, Card *right) -> bool {
