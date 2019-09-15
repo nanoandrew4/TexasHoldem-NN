@@ -7,6 +7,7 @@
 #include "../gen_algo/ElitistCombination.h"
 #include "../gen_algo/PairCrossover.h"
 #include <mutex>
+#include <fstream>
 
 class NNEvolver {
 public:
@@ -58,6 +59,10 @@ private:
     /// Evolution algorithm to be used to evolve each generation
     GeneticAlgorithm *geneticAlgorithm;
 
+	/// Stream for debugging the neural network, best player NN data is written to a file so it can be inspected and
+	/// simulated
+	std::ofstream topGenerationalPlayerStream;
+
     /**
      * Displays the variables (global and algorithm specific) that will be used in training agents.
      */
@@ -88,7 +93,7 @@ private:
      * @param timeType String to be displayed before the formatted time, can be used as an identifier
      * @param dur Duration to be displayed in hours, minutes and seconds
      */
-    void outputFormattedTime(const std::string timeType, long dur);
+    void outputFormattedTime(std::string timeType, long dur);
 
     // Debugging vals
     int raises = 0;

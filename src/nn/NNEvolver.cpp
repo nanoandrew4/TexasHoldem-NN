@@ -5,7 +5,7 @@
 #include "../../headers/nn/NNEvolver.h"
 #include "../../headers/holdem/Table.h"
 
-NNEvolver::NNEvolver() {
+NNEvolver::NNEvolver() : topGenerationalPlayerStream("topGenerationalPlayer.txt") {
 	std::cout << "Enter population size, generations to train, game iterations per "
 	          << "generation and number of threads to be used" << std::endl;
 	std::cin >> population >> gensToEvolve >> itersPerGen >> numOfThreads;
@@ -103,6 +103,9 @@ std::string NNEvolver::shortenInt(unsigned long intToShorten) {
 }
 
 void NNEvolver::train() {
+	const unsigned long inputLayerSize = playersPerTable - 1 + 4;
+	NeuralNetwork::setNeuronsPerLayer({inputLayerSize, 10, 5, 3});
+
 	for (unsigned long p = 0; p < population; ++p)
 		players.push_back(new AIPlayer());
 
@@ -138,6 +141,8 @@ void NNEvolver::train() {
 	          << 100.0 - (100.0 * (wallTime - (CPUTime / (float) numOfThreads)) / (wallTime)) << "%\n";
 
 	std::cout << "------------------------------------------------\n\n";
+
+	topGenerationalPlayerStream.close();
 
 	for (unsigned long t = 0; t < population; t++)
 		delete players.at(t);
@@ -190,6 +195,7 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 			});
 
 			richestPlayer += players.at(0)->getMoney();
+			players.at(0)->getNN()->serialize(topGenerationalPlayerStream);
 			if (currGen % 100 == 0 && currGen > 0) {
 				std::cout << "Gen " << currGen - 100 << " -> " << currGen << " stats:\n";
 				std::cout << "Rounds played: " << rounds / 100.0 << '\n';

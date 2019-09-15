@@ -67,19 +67,24 @@ NeuralNetwork *NeuralNetwork::cloneNetworkStructure(bool randomize) {
 	return new NeuralNetwork(randomize);
 }
 
-void NeuralNetwork::serialize(std::string fileName) {
+void NeuralNetwork::serialize(const std::string &fileName) {
 	std::ofstream out(fileName);
+	serialize(out);
+	out.close();
+}
 
-	out << neuronsPerLayer.size() << " ";
-	for (size_t l = 0; l < neuronsPerLayer.size(); l++)
-		out << neuronsPerLayer.at(l) << " ";
+void NeuralNetwork::serialize(std::ofstream &outputStream) {
+	outputStream << neuronsPerLayer.size() << " ";
+	for (unsigned long npl : neuronsPerLayer)
+		outputStream << npl << " ";
 
 	for (size_t l = 0; l < neuronsPerLayer.size() - 1; l++)
 		for (size_t n = 0; n < neuronsPerLayer.at(l); n++)
 			for (size_t nn = 0; nn < neuronsPerLayer.at(l + 1); nn++)
-				out << weights.at(l).at(n).at(nn) << " ";
-	out.close();
+				outputStream << weights.at(l).at(n).at(nn) << " ";
+	outputStream << "\n";
 }
+
 
 NeuralNetwork *NeuralNetwork::deserialize(const std::string &fileName) {
 	std::ifstream in(fileName);
@@ -126,7 +131,7 @@ void NeuralNetwork::forward(std::vector<double> input) {
 			activ.at(l).at(n) = 0;
 
 	// Copy input data to input layer
-	for (size_t n = 0; n < neuronsPerLayer.at(0); n++)
+	for (size_t n = 0; n < input.size(); n++)
 		activ.at(0).at(n) = sigmoid(input.at(n));
 
 	// Forward propagate to all layers

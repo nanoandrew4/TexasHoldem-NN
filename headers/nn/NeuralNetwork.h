@@ -71,7 +71,15 @@ public:
 	 *
 	 * @param fileName Name to give file containing the data for the network
 	 */
-	void serialize(std::string fileName);
+	void serialize(const std::string &fileName);
+
+	/**
+	 * Writes the network structure and the value of all the weights to a stream, and writes a newline after the network
+	 * data is successfully written.
+	 *
+	 * @param outputStream Stream to which to write the network data
+	 */
+	void serialize(std::ofstream &outputStream);
 
 	/**
 	 * Returns a pointer to a newly created neural network, with values loaded from a specified file. This file
@@ -84,7 +92,11 @@ public:
 
 	constexpr static unsigned long getNumOfLayers() { return numOfLayers; }
 
-	const static std::array<unsigned long, NeuralNetwork::numOfLayers> getNeuronsPerLayer() { return neuronsPerLayer; };
+	static std::array<unsigned long, NeuralNetwork::numOfLayers> getNeuronsPerLayer() { return neuronsPerLayer; };
+
+	static void setNeuronsPerLayer(std::array<unsigned long, NeuralNetwork::numOfLayers> newNeuronsPerLayer) {
+		NeuralNetwork::neuronsPerLayer = newNeuronsPerLayer;
+	}
 
 private:
 	static std::array<unsigned long, numOfLayers> neuronsPerLayer;
