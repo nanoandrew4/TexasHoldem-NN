@@ -72,12 +72,12 @@ public:
      * @params tableInfo Information coming from the table the player is playing at, that might be relevant
      * @return Action taken by player (-1 -> fold, 0 -> call, x > 0 -> raise by 'x')
      */
-    virtual int play(std::vector<double> tableInfo);
+    virtual int play(const std::vector<double> &tableInfo);
 
     /**
      * For use in AIPlayer. Does nothing in Player implementation.
      */
-    virtual double getHandPotential(std::vector<Card *> communityCards) { return 0; };
+    virtual double getHandPotential(const std::vector<Card *> &communityCards) { return -1; };
 
 private:
     static const int initMoney = 10000;

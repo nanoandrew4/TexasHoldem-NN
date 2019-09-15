@@ -39,7 +39,7 @@ public:
 	 * @param tableInfo Information to be used as inputs for the neural network
 	 * @return Action taken by agent (-1 -> fold, 0 -> call, x > 0 -> raise by 'x')
 	 */
-	int play(std::vector<double> tableInfo);
+	int play(const std::vector<double> &tableInfo);
 
 	/**
 	 * Sets this agent's neural network, and deletes the old one.
@@ -68,7 +68,7 @@ private:
 	 * @return Double value representing the hand potential, which is the average hand score on the next turn minus the
 	 *         current hand score
 	 */
-	double getHandPotential(std::vector<Card *> communityCards);
+	double getHandPotential(const std::vector<Card *> &communityCards);
 
 	NeuralNetwork *nn;
 };

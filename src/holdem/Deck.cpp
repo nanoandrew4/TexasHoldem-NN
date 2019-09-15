@@ -2,7 +2,8 @@
 #include <random>
 #include "../../headers/holdem/Deck.h"
 
-static unsigned long x = 123456789, y = 362436069, z = 521288629; // Used in XOR RNG
+static std::uint32_t x = std::random_device().operator()(),
+		y = std::random_device().operator()(), z = std::random_device().operator()(); // Used in XOR RNG
 
 Deck::Deck(bool autoReShuffle) {
 	deck.resize(defaultSize, Card((Suit) 0, 2));

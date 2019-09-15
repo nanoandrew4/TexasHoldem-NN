@@ -35,7 +35,7 @@ private:
      * @param startPlayer Player that makes the first betting decision
      * @param lastRaise Optional initial raise, used for setting the pre-flop call price
      */
-    void playRound(unsigned long startPlayer, int lastRaise = 0);
+    void playRound(unsigned long startPlayer, unsigned long lastRaise = 0);
 
     /**
      * Resets the table to allow for a new round to be played.

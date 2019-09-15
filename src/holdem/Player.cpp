@@ -9,7 +9,7 @@ Player::Player(std::string name) {
 
 Player::~Player() = default;
 
-int Player::play(std::vector<double> tableInfo) {
+int Player::play(const std::vector<double> &tableInfo) {
     std::cout << name << "'s hand: "; hand.displayHand();
     std::cout << name << "'s money: $" << money << std::endl;
     char opt = ' ';

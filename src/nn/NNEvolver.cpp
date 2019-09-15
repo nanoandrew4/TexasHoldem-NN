@@ -35,7 +35,8 @@ NNEvolver::NNEvolver() : topGenerationalPlayerStream("topGenerationalPlayer.txt"
 
 // For testing purposes only
 NNEvolver::NNEvolver(unsigned long population, unsigned long gensToeEvolve, unsigned long itersPerGen,
-                     unsigned long numOfThreads, int evolStrat, int parents, int crossoverRate, int mutationRate) {
+                     unsigned long numOfThreads, int evolStrat, unsigned long parents, int crossoverRate,
+                     int mutationRate) {
 	this->population = population;
 	this->gensToEvolve = gensToeEvolve;
 	this->itersPerGen = itersPerGen;
@@ -103,7 +104,7 @@ std::string NNEvolver::shortenInt(unsigned long intToShorten) {
 }
 
 void NNEvolver::train() {
-	const unsigned long inputLayerSize = playersPerTable - 1 + 4;
+	const std::uint8_t inputLayerSize = playersPerTable - 1 + 4;
 	NeuralNetwork::setNeuronsPerLayer({inputLayerSize, 10, 5, 3});
 
 	for (unsigned long p = 0; p < population; ++p)
@@ -148,8 +149,6 @@ void NNEvolver::train() {
 		delete players.at(t);
 }
 
-static auto start = std::chrono::high_resolution_clock::now();
-
 void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTable) {
 	for (unsigned long currGen = 0; currGen < gensToEvolve; ++currGen) {
 		threadGens.at(threadNum) = currGen;
@@ -161,7 +160,7 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 
 		// Play all tables
 		for (size_t t = startTable; t < endTable; ++t) {
-			std::vector<Player *> tablePlayers((unsigned long) playersPerTable /* Will always be less than 10 */);
+			std::vector<Player *> tablePlayers((unsigned long) playersPerTable /* Will always be less than 11 */);
 			for (size_t p = 0; p < playersPerTable; ++p)
 				tablePlayers.at(p) = players.at(t * playersPerTable + p);
 			Table table(tablePlayers);
@@ -198,19 +197,13 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 			players.at(0)->getNN()->serialize(topGenerationalPlayerStream);
 			if (currGen % 100 == 0 && currGen > 0) {
 				std::cout << "Gen " << currGen - 100 << " -> " << currGen << " stats:\n";
-				std::cout << "Rounds played: " << rounds / 100.0 << '\n';
-				std::cout << "Times raised: " << raises / 100.0 << '\n';
-				std::cout << "Times checked: " << checks / 100.0 << '\n';
-				std::cout << "Times folded: " << folds / 100.0 << '\n';
-				std::cout << "Richest player money: " << richestPlayer / 100.0 << "\n\n";
+				std::cout << "Rounds played: " << rounds / (double) 100 << '\n';
+				std::cout << "Times raised: " << raises / (double) 100 << '\n';
+				std::cout << "Times checked: " << checks / (double) 100 << '\n';
+				std::cout << "Times folded: " << folds / (double) 100 << '\n';
+				std::cout << "Richest player money: " << players.at(0)->getMoney() << "\n\n";
 
-				auto end = std::chrono::high_resolution_clock::now();
-				long time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-				start = end;
-
-				std::cout << "Time taken to evolve 100 gens: " << (time / 100.0) << "ms\n";
-
-				rounds = raises = checks = folds = richestPlayer = 0;
+				rounds = raises = checks = folds = 0;
 			}
 
 			// Genetic algorithm for evolution of population
@@ -229,7 +222,7 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 	}
 }
 
-void NNEvolver::outputFormattedTime(std::string timeType, long dur) {
+void NNEvolver::outputFormattedTime(const std::string& timeType, long dur) {
 	std::cout << timeType << ": ";
 	if (dur / 3600 > 0)
 		std::cout << std::setprecision(2) << dur / 3600 << "h ";
