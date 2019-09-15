@@ -193,7 +193,6 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 				return left->getMoney() > right->getMoney();
 			});
 
-			richestPlayer += players.at(0)->getMoney();
 			players.at(0)->getNN()->serialize(topGenerationalPlayerStream);
 			if (currGen % 100 == 0 && currGen > 0) {
 				std::cout << "Gen " << currGen - 100 << " -> " << currGen << " stats:\n";

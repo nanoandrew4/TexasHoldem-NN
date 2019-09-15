@@ -9,7 +9,7 @@ public:
 	/**
 	 * Number of layers in the neural network, should be updated alongside 'neuronsPerLayer'.
 	 */
-	static const std::uint8_t numOfLayers = 3;
+	static const std::uint8_t numOfLayers = 4;
 
 	/**
 	 * Initializes a network with 'layers' layers and 'n' neurons per layer, where 'n' is each element of

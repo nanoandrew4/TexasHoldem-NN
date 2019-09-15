@@ -5,7 +5,7 @@
 
 std::mt19937_64 NeuralNetwork::mt_rand(std::random_device().operator()());
 
-std::array<std::uint8_t, NeuralNetwork::getNumOfLayers()> NeuralNetwork::neuronsPerLayer = {5, 20, 3};
+std::array<std::uint8_t, NeuralNetwork::getNumOfLayers()> NeuralNetwork::neuronsPerLayer = {5, 20, 10, 3};
 
 NeuralNetwork::NeuralNetwork(bool randomize) {
 	activ.resize(neuronsPerLayer.size());
