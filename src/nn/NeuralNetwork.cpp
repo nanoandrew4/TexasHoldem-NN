@@ -5,6 +5,8 @@
 
 std::mt19937_64 NeuralNetwork::mt_rand(std::random_device().operator()());
 
+std::uniform_real_distribution<> NeuralNetwork::uniformRealDistribution(0, 1);
+
 std::array<std::uint8_t, NeuralNetwork::getNumOfLayers()> NeuralNetwork::neuronsPerLayer = {5, 20, 10, 3};
 
 NeuralNetwork::NeuralNetwork(bool randomize) {
@@ -22,7 +24,7 @@ NeuralNetwork::NeuralNetwork(bool randomize) {
 			weights.at(l).at(n).resize(neuronsPerLayer.at(l + 1));
 			if (randomize) {
 				for (size_t nn = 0; nn < neuronsPerLayer.at(l + 1); nn++)
-					weights.at(l).at(n).at(nn) = (mt_rand() % 100) / (double) (mt_rand() % 999 + 1);
+					weights.at(l).at(n).at(nn) = uniformRealDistribution(mt_rand);
 			}
 		}
 	}
@@ -46,7 +48,7 @@ NeuralNetwork::NeuralNetwork(std::vector<std::uint8_t> neuronsPerLayer, bool ran
 			weights.at(l).at(n).resize(neuronsPerLayer.at(l + 1));
 			if (randomize) {
 				for (size_t nn = 0; nn < neuronsPerLayer.at(l + 1); nn++)
-					weights.at(l).at(n).at(nn) = (mt_rand() % 100) / (double) (mt_rand() % 999 + 1);
+					weights.at(l).at(n).at(nn) = uniformRealDistribution(mt_rand);
 			}
 		}
 	}

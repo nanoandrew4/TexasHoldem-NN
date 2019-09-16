@@ -126,6 +126,8 @@ private:
 	double invSigmoid(double d);
 
 	static std::mt19937_64 mt_rand;
+
+	static std::uniform_real_distribution<> uniformRealDistribution;
 };
 
 
