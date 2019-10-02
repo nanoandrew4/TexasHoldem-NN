@@ -7,7 +7,7 @@
 #include "../../headers/test/DeckTest.h"
 #include "../../headers/test/HandTest.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char **argv) {
 	if (argc > 1) {
 		NNEvolver evolver(1000, 100000, 8, std::thread::hardware_concurrency(), 0, 10, 0, 0);
 		evolver.train();

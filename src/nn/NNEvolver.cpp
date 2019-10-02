@@ -105,7 +105,9 @@ std::string NNEvolver::shortenInt(unsigned long intToShorten) {
 
 void NNEvolver::train() {
 	const std::uint8_t inputLayerSize = playersPerTable - 1 + 4;
-	NeuralNetwork::setNeuronsPerLayer({inputLayerSize, 10, 5, 3});
+	const std::uint8_t hiddenLayer1Size = inputLayerSize - inputLayerSize / 4;
+	const std::uint8_t hiddenLayer2Size = inputLayerSize - inputLayerSize / 3;
+	NeuralNetwork::setNeuronsPerLayer({inputLayerSize, hiddenLayer1Size, hiddenLayer2Size, 7});
 
 	for (unsigned long p = 0; p < population; ++p)
 		players.push_back(new AIPlayer());
@@ -117,7 +119,7 @@ void NNEvolver::train() {
 	std::vector<std::thread> threads(numOfThreads);
 	size_t thread = 0;
 	for (unsigned long startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
-		unsigned long startTable = startPopPos == 0 ? 0 : (startPopPos + playersPerTable) / playersPerTable;
+		unsigned long startTable = startPopPos / playersPerTable;
 		unsigned long endTable =
 				(startPopPos + popPerThread > population ? population : startPopPos + popPerThread) / playersPerTable;
 		threads.at(thread) = std::thread(&NNEvolver::trainerThread, this, thread, startTable, endTable);
@@ -181,7 +183,6 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 
 		mu.lock();
 		threadsDone++;
-		mu.unlock();
 
 		// Last thread to finish their portion of the generation sorts and evolves the players
 		if (threadsDone == numOfThreads) {
@@ -218,6 +219,7 @@ void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTab
 
 			threadsDone = 0;
 		}
+		mu.unlock();
 	}
 }
 

@@ -18,7 +18,7 @@ public:
 	 *
 	 * @param agentFile File to load agent data from. File extension should not be omitted
 	 */
-	explicit AIPlayer(std::string agentFile);
+	explicit AIPlayer(const std::string &agentFile);
 
 	/**
 	 * Constructs an agent from a previously serialized agent neural network. This constructor employs the
@@ -28,7 +28,7 @@ public:
 	 * @param agentFile File to load agent data from. File extension should not be omitted
 	 * @param agentName Name to assign to this agent
 	 */
-	AIPlayer(std::string agentFile, std::string agentName);
+	AIPlayer(const std::string &agentFile, std::string agentName);
 
 	~AIPlayer();
 
@@ -69,6 +69,8 @@ private:
 	 *         current hand score
 	 */
 	double getHandPotential(const std::vector<Card *> &communityCards);
+
+	int getRaise(const int action);
 
 	NeuralNetwork *nn;
 };

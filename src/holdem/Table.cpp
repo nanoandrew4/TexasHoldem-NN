@@ -100,7 +100,8 @@ bool Table::newRound() {
 		}
 
 		std::vector<Card *> cards;
-		for (int p = 0; p < activePlayers * 2; p++)
+		cards.reserve(activePlayers * 2);
+		for (unsigned long p = 0; p < activePlayers * 2; p++)
 			cards.push_back(deck.deal());
 
 		unsigned long cardCount = 0;

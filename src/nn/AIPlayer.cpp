@@ -8,11 +8,11 @@ AIPlayer::AIPlayer() {
 	nn = new NeuralNetwork(true);
 }
 
-AIPlayer::AIPlayer(std::string agentFile) {
+AIPlayer::AIPlayer(const std::string &agentFile) {
 	nn = NeuralNetwork::deserialize(agentFile);
 }
 
-AIPlayer::AIPlayer(std::string agentFile, std::string agentName) {
+AIPlayer::AIPlayer(const std::string &agentFile, std::string agentName) {
 	nn = NeuralNetwork::deserialize(agentFile);
 	this->name = std::move(agentName);
 }
@@ -28,18 +28,33 @@ int AIPlayer::play(const std::vector<double> &tableInfo) {
 		if (Table::output)
 			std::cout << "AI FOLDED" << std::endl;
 		return -1;
-	} else if ((action <= tableInfo.at(0) && money > 0) || allIn) {
+	} else if ((action == 0 && money > 0) || allIn) {
 		if (Table::output)
 			std::cout << "AI CHECKED" << std::endl;
 		return 0;
-	} else if (action > tableInfo.at(0) && money >= action) {
+	} else {
 		if (Table::output)
 			std::cout << "AI RAISED" << std::endl;
-		return action;
+		const int raiseAmount = getRaise(action);
+		return raiseAmount > this->getMoney() ? 0 : raiseAmount;
 	}
+}
 
-	std::cout << "NN Action determination failed... " << std::endl;
-	exit(1);
+int AIPlayer::getRaise(const int action) {
+	switch (action) {
+		case 1:
+			return 5;
+		case 2:
+			return 25;
+		case 3:
+			return 50;
+		case 4:
+			return 100;
+		case 5:
+			return 500;
+		default:
+			return 1;
+	}
 }
 
 double AIPlayer::getHandPotential(const std::vector<Card *> &communityCards) {

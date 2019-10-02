@@ -7,7 +7,7 @@ std::mt19937_64 NeuralNetwork::mt_rand(std::random_device().operator()());
 
 std::uniform_real_distribution<> NeuralNetwork::uniformRealDistribution(0, 1);
 
-std::array<std::uint8_t, NeuralNetwork::getNumOfLayers()> NeuralNetwork::neuronsPerLayer = {5, 20, 10, 3};
+std::array<std::uint8_t, NeuralNetwork::getNumOfLayers()> NeuralNetwork::neuronsPerLayer = {5, 20, 10, 8};
 
 NeuralNetwork::NeuralNetwork(bool randomize) {
 	activ.resize(neuronsPerLayer.size());
@@ -152,9 +152,6 @@ int NeuralNetwork::getAction(const std::vector<double> &input) {
 	for (size_t n = 1; n < neuronsPerLayer.back(); ++n)
 		if (activ.back().at(n) > activ.back().at(maxIndex))
 			maxIndex = n;
-
-	if (maxIndex == 2)
-		return (int) (invSigmoid(activ.back().at(maxIndex)));
 
 	return (int) (maxIndex - 1);
 }
