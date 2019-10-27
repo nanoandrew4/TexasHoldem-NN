@@ -2,27 +2,25 @@
 
 std::mt19937_64 PairCrossover::mt_rand(std::random_device().operator()());
 
-void PairCrossover::evolve(std::vector<AIPlayer *> &players, bool lastGen) {
-	if (lastGen)
-		return;
+std::uniform_real_distribution<> PairCrossover::mutationEffectDistribution(-0.05, 0.05);
 
-	size_t population = players.size();
+void PairCrossover::evolve(const std::vector<AIPlayer *> &players) const {
+	const size_t population = players.size();
 
-	std::array<std::uint8_t, NeuralNetwork::numOfLayers> neuronsPerLayer = players.at(
-			0)->getNN()->getNeuronsPerLayer();
+	std::array<std::uint8_t, NeuralNetwork::numOfLayers> neuronsPerLayer = NeuralNetwork::getNeuronsPerLayer();
 	for (size_t pop = 0; pop < population - 1; pop += 2) {
 		for (size_t layer = 0; layer < neuronsPerLayer.size() - 1; layer++) {
-			size_t neuronsInLayer = neuronsPerLayer.at(layer);
+			const size_t neuronsInLayer = neuronsPerLayer.at(layer);
 			for (size_t neuron = 0; neuron < neuronsInLayer; neuron++) {
-				size_t neuronsInNextLayer = neuronsPerLayer.at(layer + 1);
+				const size_t neuronsInNextLayer = neuronsPerLayer.at(layer + 1);
 				for (size_t nextLayerNeuron = 0; nextLayerNeuron < neuronsInNextLayer; nextLayerNeuron += 2) {
 					double connSwapNetwork1 = players.at(pop)->getNN()->getWeightaAt(layer, neuron, nextLayerNeuron);
 					double connSwapNetwork2 = players.at(pop + 1)->getNN()->getWeightaAt(layer, neuron,
 					                                                                     nextLayerNeuron);
 					if (mt_rand() % 1000 < 20) // % chance of mutation
-						connSwapNetwork1 += ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
+						connSwapNetwork1 += mutationEffectDistribution(mt_rand);
 					if (mt_rand() % 1000 < 20) // % chance of mutation
-						connSwapNetwork2 += ((mt_rand() % 10) / (mt_rand() % 999 + 1) - (1 / 500));
+						connSwapNetwork2 += mutationEffectDistribution(mt_rand);
 					if (mt_rand() % 1000 < 700) { // % chance of crossover
 						players.at(pop)->getNN()->setWeightAt(layer, neuron, nextLayerNeuron, connSwapNetwork2);
 						players.at(pop + 1)->getNN()->setWeightAt(layer, neuron, nextLayerNeuron, connSwapNetwork1);
@@ -33,17 +31,18 @@ void PairCrossover::evolve(std::vector<AIPlayer *> &players, bool lastGen) {
 		players.at(pop)->resetMoney();
 		players.at(pop + 1)->resetMoney();
 	}
+	players.back()->resetMoney();
 }
 
-std::string PairCrossover::getAlgorithmType() {
+std::string PairCrossover::getAlgorithmType() const {
 	return "Pair crossover";
 }
 
-std::string PairCrossover::getAlgoDescriptor() {
+std::string PairCrossover::getAlgoDescriptor() const {
 	return "p-cross";
 }
 
-std::string PairCrossover::getVarsDescriptor() {
+std::string PairCrossover::getVarsDescriptor() const {
 	std::ostringstream oss;
 	oss << "_" << crossoverRate / 10.0 << "-cross_" << mutationRate / 10.0 << "-mut";
 	return oss.str();

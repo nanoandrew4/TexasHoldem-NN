@@ -19,13 +19,13 @@ public:
 	 * @param players Vector containing all agents
 	 * @param lastGen True if this is the last generation to be evolved, false otherwise
 	 */
-	void evolve(std::vector<AIPlayer *> &players, bool lastGen);
+	void evolve(const std::vector<AIPlayer *> &players) const;
 
-	std::string getAlgorithmType();
+	std::string getAlgorithmType() const;
 
-	std::string getAlgoDescriptor();
+	std::string getAlgoDescriptor() const;
 
-	std::string getVarsDescriptor();
+	std::string getVarsDescriptor() const;
 
 	void setEvolutionVars();
 
@@ -35,6 +35,8 @@ private:
 	unsigned long numOfParents;
 
 	static std::mt19937_64 mt_rand;
+
+	static std::uniform_real_distribution<> noiseDistribution;
 };
 
 #endif //TEXAS_HOLDEM_NN_ELITISTCOMBINATION_H

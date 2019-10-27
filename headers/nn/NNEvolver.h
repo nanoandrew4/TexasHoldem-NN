@@ -8,6 +8,8 @@
 #include "../gen_algo/PairCrossover.h"
 #include <mutex>
 #include <fstream>
+#include <atomic>
+#include <memory>
 
 class NNEvolver {
 public:
@@ -18,8 +20,9 @@ public:
 	NNEvolver();
 
 	// For testing purposes
-	NNEvolver(unsigned long population, unsigned long gensToeEvolve, unsigned long itersPerGen,
-	          unsigned long numOfThreads, int evolStrat, unsigned long parents, int crossoverRate, int mutationRate);
+	NNEvolver(unsigned long population, unsigned int playersPerTable, unsigned long gensToEvolve,
+	          unsigned long itersPerGen, unsigned long numOfThreads, int evolStrat, unsigned long parents,
+	          int crossoverRate, int mutationRate);
 
 	~NNEvolver();
 
@@ -40,21 +43,18 @@ public:
 	static std::string shortenInt(unsigned long intToShorten);
 
 private:
-	/// Vector of players to be evolved
-	std::vector<AIPlayer *> players;
-
 	/// Global evolution variables
 	unsigned long population;
 	unsigned long gensToEvolve;
 	unsigned long itersPerGen;
 	unsigned long numOfThreads;
 
-	int playersPerTable = 2;
-	unsigned long popPerThread;
+	unsigned int playersPerTable = 2;
 	std::vector<long> threadGens;
-	unsigned long threadsDone = 0;
 
-	std::mutex mu;
+	unsigned long generationsPerWorldCup = 100;
+	unsigned long playedWorldCups = 0;
+	unsigned long worldCupGenerations = 1;
 
 	/// Evolution algorithm to be used to evolve each generation
 	GeneticAlgorithm *geneticAlgorithm;
@@ -63,10 +63,14 @@ private:
 	/// simulated
 	std::ofstream topGenerationalPlayerStream;
 
-    /**
-     * Displays the variables (global and algorithm specific) that will be used in training agents.
-     */
-    void displayEvolverInfo();
+	/// Stream for debugging neural network, with bigger generation steps and less volume of data compared to
+	/// topGenerationalPlayerStream
+	std::ofstream topWorldCupPlayerStream;
+
+	/**
+	 * Displays the variables (global and algorithm specific) that will be used in training agents.
+	 */
+	void displayEvolverInfo();
 
 	/**
 	 * Writes the data of a neural network to a file. The file name for the output data will be fashioned after the
@@ -76,16 +80,13 @@ private:
 	 */
 	void writeToFile(NeuralNetwork *nn);
 
-	/**
-	 * Training thread, simulates 'itersPerGen' tables, using players in vector 'players' between 'startPlayer' index
-	 * and 'endPlayer' index. Breaks up work load amongst threads to improve runtime. Threads are joined before anything
-	 * is done with the players vector.
-	 *
-	 * @param threadNum Thread identifier
-	 * @param startTable TODO
-	 * @param endTable TODO
-	 */
-	void trainerThread(size_t threadNum, size_t startTable, size_t endTable);
+	void trainPlayerGroups(const std::vector<std::vector<AIPlayer *>> &playerGroups);
+
+	void trainPlayerGroup(std::vector<AIPlayer *> &playerGroup, unsigned long gensToTrain);
+
+	void worldCup(const std::vector<std::vector<AIPlayer *>> &playerGroups);
+
+	void printTrainingData(const std::vector<AIPlayer *> &playerGroup);
 
 	/**
 	 * Outputs a given number in hours, minutes and seconds.
@@ -96,10 +97,10 @@ private:
 	void outputFormattedTime(const std::string &timeType, long dur);
 
 	// Debugging vals
-	int raises = 0;
-	int rounds = 0;
-	int folds = 0;
-	int checks = 0;
+	std::atomic<unsigned long> raises = 0;
+	std::atomic<unsigned long> rounds = 0;
+	std::atomic<unsigned long> folds = 0;
+	std::atomic<unsigned long> checks = 0;
 };
 
 #endif //TEXAS_HOLDEM_NN_NNEVOLVER_H

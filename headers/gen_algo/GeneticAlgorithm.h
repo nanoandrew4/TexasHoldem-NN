@@ -3,11 +3,12 @@
 
 #include <iostream>
 #include <sstream>
+#include <memory>
 #include "../nn/AIPlayer.h"
 
 class GeneticAlgorithm {
 public:
-	GeneticAlgorithm() { srand(time(nullptr)); };
+	GeneticAlgorithm() = default;
 
 	virtual ~GeneticAlgorithm() = default;
 
@@ -18,7 +19,7 @@ public:
 	 * @param players Vector of players (population)
 	 * @param lastGen True if this is the last generation to be evolved, false otherwise
 	 */
-	virtual void evolve(std::vector<AIPlayer *> &players, bool lastGen) = 0;
+	virtual void evolve(const std::vector<AIPlayer *> &players) const = 0;
 
 	/**
 	 * Returns the name of the evolutionary algorithm an implementation of this class uses. Useful for displaying to
@@ -26,7 +27,7 @@ public:
 	 *
 	 * @return Name of the evolutionary algorithm
 	 */
-	virtual std::string getAlgorithmType() = 0;
+	[[nodiscard]] virtual std::string getAlgorithmType() const = 0;
 
 	/**
 	 * Returns a string that is attached to the output file name, representing the algorithm that was used. This is
@@ -35,7 +36,7 @@ public:
 	 *
 	 * @return String identifier of the algorithm that was used for evolution
 	 */
-	virtual std::string getAlgoDescriptor() = 0;
+	[[nodiscard]] virtual std::string getAlgoDescriptor() const = 0;
 
 	/**
 	 * Returns a string that is attached to the output file name, representing the variables that were used during
@@ -46,7 +47,7 @@ public:
 	 *
 	 * @return String identifier of the variables and values used for evolution
 	 */
-	virtual std::string getVarsDescriptor() = 0;
+	[[nodiscard]] virtual std::string getVarsDescriptor() const = 0;
 
 	/**
 	 * Called right after initialization of the 'GeneticAlgorithm' implementation, sets up the algorithm specific

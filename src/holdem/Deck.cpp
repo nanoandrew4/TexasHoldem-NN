@@ -1,84 +1,43 @@
 #include <iostream>
 #include <random>
+#include <algorithm>
 #include "../../headers/holdem/Deck.h"
 
-static std::uint32_t x = std::random_device().operator()(),
-		y = std::random_device().operator()(), z = std::random_device().operator()(); // Used in XOR RNG
+std::default_random_engine randomEngine(std::chrono::system_clock::now().time_since_epoch().count());
 
 Deck::Deck(bool autoReShuffle) {
 	deck.resize(defaultSize, Card((Suit) 0, 2));
-	for (unsigned int c = 0; c < defaultSize; ++c) deck.at(c) = (Card((Suit) ((c / 13)), (c % 13) + 2));
+	for (unsigned int c = 0; c < defaultSize; ++c) deck.at(c) = Card((Suit) ((c / 13)), (c % 13) + 2);
 	pos = defaultSize;
 	this->autoReShuffle = autoReShuffle;
-	shuffle();
+	std::shuffle(deck.begin(), deck.end(), randomEngine);
 }
 
 Deck::Deck(std::vector<Card *> cards) {
-	size_t cardsEliminated = 0;
-	deck.resize(52, Card((Suit) 0, 2));
+	deck.resize(52 - cards.size(), Card((Suit) 0, 2));
 
-	for (unsigned int c = 51; c < 0xffff; --c) { // Wait for underflow, then stop
-		if (cardsEliminated >= cards.size() || cards.at(cardsEliminated)->getCardValue() != (c % 13) + 2 ||
-		    cards.at(cardsEliminated)->getSuit() != (Suit) ((c / 13)))
-			deck.at(c) = Card((Suit) ((c / 13)), (c % 13) + 2);
-		else
-			cardsEliminated++;
-	}
-
-	// Remove any that were not caught in the initialization
-	while (cardsEliminated != cards.size()) {
-		// 'c' is unsigned, so when it overflows, exit the loop
-		for (size_t c = deck.size() - 1; c < 0xffffffff && cardsEliminated != cards.size(); --c)
-			if (cards.at(cardsEliminated)->getCardValue() == deck.at(c).getCardValue() &&
-			    cards.at(cardsEliminated)->getSuit() == deck.at(c).getSuit()) {
-				deck.at(c) = Card((Suit) 0, 2);
-				cardsEliminated++;
-			}
+	unsigned int omittedCards = 0;
+	for (unsigned int c = 0; c < defaultSize; ++c) {
+		const Card currCard = Card((Suit) ((c / 13)), (c % 13) + 2);
+		long cardIdx = currCard.isContainedIn(cards);
+		if (cardIdx != -1) {
+			cards.erase(cards.begin() + cardIdx);
+			++omittedCards;
+		} else
+			deck.at(c - omittedCards) = currCard;
 	}
 
 	pos = deck.size();
-	shuffle();
-
+	std::shuffle(deck.begin(), deck.end(), randomEngine);
 }
 
 Deck::~Deck() = default;
-
-/*
- * XORshift RNG.
- */
-unsigned long xorshf96() {
-	unsigned long t;
-	x ^= x << 16;
-	x ^= x >> 5;
-	x ^= x << 1;
-
-	t = x;
-	x = y;
-	y = z;
-	z = t ^ x ^ y;
-
-	return z;
-}
-
-void Deck::shuffle() {
-	size_t deckSize = deck.size();
-	size_t cardsToShuffle = deckSize / 2;
-
-	unsigned long newPos;
-	Card tmp = deck.at(0);
-	for (size_t i = 0; i < cardsToShuffle; ++i) {
-		newPos = xorshf96() % deckSize;
-		tmp = deck.at(i);
-		deck.at(i) = deck.at(newPos);
-		deck.at(newPos) = tmp;
-	}
-}
 
 Card *Deck::deal() {
 	// To prevent breaking, decks can be reused. Re-shuffle and reset pos if deck "runs out"
 	if (pos == 0) {
 		if (autoReShuffle)
-			shuffle();
+			std::shuffle(deck.begin(), deck.end(), randomEngine);
 		pos = deck.size();
 	}
 

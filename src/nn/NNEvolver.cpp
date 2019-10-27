@@ -1,11 +1,14 @@
 #include <iostream>
 #include <algorithm>
+#include <random>
 #include <thread>
 #include <iomanip>
+#include <future>
 #include "../../headers/nn/NNEvolver.h"
 #include "../../headers/holdem/Table.h"
 
-NNEvolver::NNEvolver() : topGenerationalPlayerStream("topGenerationalPlayer.txt") {
+NNEvolver::NNEvolver() : topGenerationalPlayerStream("topGenerationalPlayer.txt"),
+                         topWorldCupPlayerStream("topWorldCupPlayer.txt") {
 	std::cout << "Enter population size, generations to train, game iterations per "
 	          << "generation and number of threads to be used" << std::endl;
 	std::cin >> population >> gensToEvolve >> itersPerGen >> numOfThreads;
@@ -15,6 +18,7 @@ NNEvolver::NNEvolver() : topGenerationalPlayerStream("topGenerationalPlayer.txt"
 	int eStrat;
 	std::cin >> eStrat;
 	switch (eStrat) {
+		default:
 		case 0:
 			geneticAlgorithm = new ElitistCombination();
 			break;
@@ -23,28 +27,22 @@ NNEvolver::NNEvolver() : topGenerationalPlayerStream("topGenerationalPlayer.txt"
 			break;
 	}
 	geneticAlgorithm->setEvolutionVars();
-
-	for (int p = 10; p > 2; --p)
-		if (population % p == 0) {
-			playersPerTable = p;
-			break;
-		}
-
-	popPerThread = (population / numOfThreads) + 1;
 }
 
 // For testing purposes only
-NNEvolver::NNEvolver(unsigned long population, unsigned long gensToeEvolve, unsigned long itersPerGen,
-                     unsigned long numOfThreads, int evolStrat, unsigned long parents, int crossoverRate,
-                     int mutationRate) {
+NNEvolver::NNEvolver(unsigned long population, unsigned int playersPerTable, unsigned long gensToEvolve,
+                     unsigned long itersPerGen, unsigned long numOfThreads, int evolStrat, unsigned long parents,
+                     int crossoverRate, int mutationRate) {
 	this->population = population;
-	this->gensToEvolve = gensToeEvolve;
+	this->gensToEvolve = gensToEvolve;
 	this->itersPerGen = itersPerGen;
 	this->numOfThreads = numOfThreads;
+	this->playersPerTable = playersPerTable;
 
 	threadGens.resize(numOfThreads, 0);
 
 	switch (evolStrat) {
+		default:
 		case 0:
 			geneticAlgorithm = new ElitistCombination(parents);
 			break;
@@ -52,14 +50,6 @@ NNEvolver::NNEvolver(unsigned long population, unsigned long gensToeEvolve, unsi
 			geneticAlgorithm = new PairCrossover(crossoverRate, mutationRate);
 			break;
 	}
-
-	for (int p = 10; p > 2; --p)
-		if (population % p == 0) {
-			playersPerTable = p;
-			break;
-		}
-
-	popPerThread = (population / numOfThreads) + 1;
 }
 
 NNEvolver::~NNEvolver() {
@@ -94,43 +84,42 @@ void NNEvolver::writeToFile(NeuralNetwork *nn) {
 
 std::string NNEvolver::shortenInt(unsigned long intToShorten) {
 	std::ostringstream oss;
-	if (intToShorten / 1000000 > 0)
-		oss << intToShorten / 1000000 << "M";
-	else if (intToShorten / 1000 > 0)
-		oss << intToShorten / 1000 << "k";
+	if (intToShorten / 1'000'000 > 0)
+		oss << intToShorten / 1'000'000 << "M";
+	else if (intToShorten / 1'000 > 0)
+		oss << intToShorten / 1'000 << "k";
 	else
 		oss << intToShorten;
 	return oss.str();
 }
 
 void NNEvolver::train() {
-	const std::uint8_t inputLayerSize = playersPerTable - 1 + 4;
+	topGenerationalPlayerStream << numOfThreads << "\n";
+
+	const std::uint8_t inputLayerSize = NeuralNetwork::numOfInputs;
 	const std::uint8_t hiddenLayer1Size = inputLayerSize - inputLayerSize / 4;
 	const std::uint8_t hiddenLayer2Size = inputLayerSize - inputLayerSize / 3;
 	NeuralNetwork::setNeuronsPerLayer({inputLayerSize, hiddenLayer1Size, hiddenLayer2Size, 7});
 
-	for (unsigned long p = 0; p < population; ++p)
-		players.push_back(new AIPlayer());
+	std::vector<std::vector<AIPlayer *>> playerGroups(numOfThreads);
+	for (unsigned long p = 0; p < population; p++)
+		playerGroups.at(p % numOfThreads).emplace_back(new AIPlayer());
 
-	displayEvolverInfo();
-	long startWallTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
-	clock_t startCPUTime = clock();
-
-	std::vector<std::thread> threads(numOfThreads);
-	size_t thread = 0;
-	for (unsigned long startPopPos = 0; startPopPos < population; startPopPos += popPerThread) {
-		unsigned long startTable = startPopPos / playersPerTable;
-		unsigned long endTable =
-				(startPopPos + popPerThread > population ? population : startPopPos + popPerThread) / playersPerTable;
-		threads.at(thread) = std::thread(&NNEvolver::trainerThread, this, thread, startTable, endTable);
-		++thread;
+	for (const std::vector<AIPlayer *> &playerGroup : playerGroups) {
+		if (playerGroup.size() % playersPerTable != 0) {
+			std::cout << "Training aborted, population should be adjusted so all tables are fully filled" << std::endl;
+			return;
+		}
 	}
 
-	for (size_t t = 0; t < numOfThreads; ++t)
-		threads.at(t).join();
+	displayEvolverInfo();
+	long startWallTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1'000'000'000;
+	clock_t startCPUTime = clock();
+
+	trainPlayerGroups(playerGroups);
 
 	clock_t endCPUTime = clock();
-	long endWallTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000000;
+	long endWallTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1'000'000'000;
 
 	std::cout << '\n';
 
@@ -146,84 +135,92 @@ void NNEvolver::train() {
 	std::cout << "------------------------------------------------\n\n";
 
 	topGenerationalPlayerStream.close();
+	topWorldCupPlayerStream.close();
 
-	for (unsigned long t = 0; t < population; t++)
-		delete players.at(t);
+	for (auto &playerGroup : playerGroups)
+		for (AIPlayer *player : playerGroup)
+			delete player;
 }
 
-void NNEvolver::trainerThread(size_t threadNum, size_t startTable, size_t endTable) {
-	for (unsigned long currGen = 0; currGen < gensToEvolve; ++currGen) {
-		threadGens.at(threadNum) = currGen;
-		for (size_t t = 0; t < numOfThreads;) { // Wait for all threads to catch up to this generation
-			if (threadGens.at(t) >= currGen)
-				++t;
-			std::this_thread::sleep_for(std::chrono::microseconds(100));
-		}
-
-		// Play all tables
-		for (size_t t = startTable; t < endTable; ++t) {
-			std::vector<Player *> tablePlayers((unsigned long) playersPerTable /* Will always be less than 11 */);
-			for (size_t p = 0; p < playersPerTable; ++p)
-				tablePlayers.at(p) = players.at(t * playersPerTable + p);
-			Table table(tablePlayers);
-			try {
-				table.play();
-				rounds += table.rounds;
-				raises += table.raises;
-				checks += table.checks;
-				folds += table.folds;
-			} catch (std::exception &e) {
-				mu.lock();
-				std::cout << "Error in table" << std::endl;
-//				std::cout << "Start table: " << startTable << std::endl;
-//				std::cout << "End table: " << endTable << std::endl;
-				mu.unlock();
+void NNEvolver::trainPlayerGroups(const std::vector<std::vector<AIPlayer *>> &playerGroups) {
+	for (unsigned long g = 0; g < gensToEvolve; g += generationsPerWorldCup) {
+		std::vector<std::thread> threads;
+		for (auto playerGroup : playerGroups) {
+			if (playerGroup != playerGroups.back()) {
+				threads.emplace_back(std::thread(&NNEvolver::trainPlayerGroup, this, std::ref(playerGroup),
+				                                 std::ref(generationsPerWorldCup)));
+			} else {
+				trainPlayerGroup(playerGroup, generationsPerWorldCup);
 			}
 		}
+		for (auto &thread: threads)
+			thread.join();
 
-		mu.lock();
-		threadsDone++;
-
-		// Last thread to finish their portion of the generation sorts and evolves the players
-		if (threadsDone == numOfThreads) {
-//            std::cout << "\rFinished training gen: " << currGen + 1 << std::flush;
-//            for (size_t p = 0; p < players.size(); ++p)
-//                if (players.at(p)->getMoney() == 10000)
-//                    players.at(p)->anteUp(10000);
-			std::sort(players.begin(), players.end(), [](AIPlayer *left, AIPlayer *right) -> bool {
-				return left->getMoney() > right->getMoney();
-			});
-
-			players.at(0)->getNN()->serialize(topGenerationalPlayerStream);
-			if (currGen % 100 == 0 && currGen > 0) {
-				std::cout << "Gen " << currGen - 100 << " -> " << currGen << " stats:\n";
-				std::cout << "Rounds played: " << rounds / (double) 100 << '\n';
-				std::cout << "Times raised: " << raises / (double) 100 << '\n';
-				std::cout << "Times checked: " << checks / (double) 100 << '\n';
-				std::cout << "Times folded: " << folds / (double) 100 << '\n';
-				std::cout << "Richest player money: " << players.at(0)->getMoney() << "\n\n";
-
-				rounds = raises = checks = folds = 0;
-			}
-
-			// Genetic algorithm for evolution of population
-			bool lastGen = currGen == gensToEvolve - 1;
-
-			try {
-				geneticAlgorithm->evolve(players, lastGen);
-			} catch (std::exception &e) {
-				std::cout << "Error in evolve" << std::endl;
-			}
-			if (lastGen)
-				writeToFile(players.at(0)->getNN());
-
-			threadsDone = 0;
-		}
-		mu.unlock();
+		worldCup(playerGroups);
 	}
 }
 
-void NNEvolver::outputFormattedTime(const std::string& timeType, long dur) {
+void NNEvolver::trainPlayerGroup(std::vector<AIPlayer *> &playerGroup, unsigned long gensToTrain) {
+	for (unsigned long currGen = 0; currGen < gensToTrain && currGen < gensToEvolve; currGen++) {
+		std::shuffle(playerGroup.begin(), playerGroup.end(), std::mt19937(std::random_device()()));
+		for (size_t t = 0; t < playerGroup.size() / playersPerTable; ++t) {
+			std::vector<Player *> tablePlayers((unsigned long) playersPerTable /* Will always be less than 11 */);
+			for (size_t p = 0; p < playersPerTable; ++p)
+				tablePlayers.at(p) = playerGroup.at(t * playersPerTable + p);
+			Table table(tablePlayers);
+			table.play();
+			rounds += table.rounds;
+			raises += table.raises;
+			checks += table.checks;
+			folds += table.folds;
+		}
+
+		std::sort(playerGroup.begin(), playerGroup.end(), [](AIPlayer *left, AIPlayer *right) {
+			return left->getMoney() > right->getMoney();
+		});
+
+		if (gensToTrain == worldCupGenerations) { // World cup round
+			playerGroup.at(0)->getNN()->serialize(topWorldCupPlayerStream);
+			printTrainingData(playerGroup);
+		}
+
+		if (currGen < gensToEvolve - 1)
+			geneticAlgorithm->evolve(playerGroup);
+		else
+			return;
+	}
+}
+
+void NNEvolver::worldCup(const std::vector<std::vector<AIPlayer *>> &playerGroups) {
+	std::vector<AIPlayer *> players;
+	for (auto &playerGroup : playerGroups)
+		std::move(playerGroup.begin(), playerGroup.end(), std::back_inserter(players));
+	std::cout << "Stats for World Cup " << ++playedWorldCups << " of " << gensToEvolve / generationsPerWorldCup << '\n';
+	trainPlayerGroup(players, 1);
+	// Shuffle player groups?
+}
+
+void NNEvolver::printTrainingData(const std::vector<AIPlayer *> &playerGroup) {
+	std::cout << "Rounds played: " << rounds << '\n';
+	std::cout << "Times raised: " << raises << '\n';
+	std::cout << "Times checked: " << checks << '\n';
+	std::cout << "Times folded: " << folds << '\n';
+	std::cout << "Richest player money: " << playerGroup.at(0)->getMoney() << "\n\n";
+
+	unsigned long totalMoney = 0;
+	unsigned long playersHoldingHalfOfAllMoney = 0;
+	for (unsigned long p = 0; p < playerGroup.size(); p++) {
+		totalMoney += playerGroup.at(p)->getMoney();
+		if (totalMoney < playerGroup.size() * 5'000)
+			playersHoldingHalfOfAllMoney++;
+	}
+	std::cout << "TotalMoney: " << totalMoney << "\n"; // TODO: EXTRA MONEY BEING CREATED :(
+	std::cout << playersHoldingHalfOfAllMoney << " players hold roughly half of the total money\n\n";
+
+	rounds = raises = checks = folds = 0;
+}
+
+void NNEvolver::outputFormattedTime(const std::string &timeType, long dur) {
 	std::cout << timeType << ": ";
 	if (dur / 3600 > 0)
 		std::cout << std::setprecision(2) << dur / 3600 << "h ";

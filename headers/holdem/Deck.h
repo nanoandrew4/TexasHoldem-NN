@@ -52,9 +52,6 @@ private:
 	std::uint8_t pos;
 
 	bool autoReShuffle;
-
-	// Shuffles the deck, by randomly swapping cards.
-	void shuffle();
 };
 
 #endif //TEXAS_HOLDEM_NN_DECK_H

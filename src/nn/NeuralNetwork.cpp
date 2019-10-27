@@ -9,6 +9,8 @@ std::uniform_real_distribution<> NeuralNetwork::uniformRealDistribution(0, 1);
 
 std::array<std::uint8_t, NeuralNetwork::getNumOfLayers()> NeuralNetwork::neuronsPerLayer = {5, 20, 10, 8};
 
+unsigned int NeuralNetwork::numOfInputs = 21;
+
 NeuralNetwork::NeuralNetwork(bool randomize) {
 	activ.resize(neuronsPerLayer.size());
 	weights.resize(neuronsPerLayer.size() - 1);

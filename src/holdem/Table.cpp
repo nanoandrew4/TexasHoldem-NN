@@ -1,6 +1,7 @@
 #include <iostream>
 #include <utility>
 #include "../../headers/holdem/Table.h"
+#include "../../headers/nn/NeuralNetwork.h"
 
 bool Table::output = false;
 
@@ -20,7 +21,7 @@ void Table::play() {
 		if (!newRound())
 			return;
 
-		int blinds = assignSpecialRoles(dealer);
+		int blinds = assignDealerAndBlinds(dealer);
 		initAntes(blinds == 2);
 
 		// Pre-flop
@@ -42,7 +43,7 @@ void Table::play() {
 				communityCards.push_back(deck.deal());
 			if (output) {
 				std::cout << "Community cards: ";
-				players.at(0)->hand.displayHand(communityCards);
+				Hand::displayHand(communityCards);
 				std::cout << std::endl;
 			}
 			playRound((dealer + 1) % numOfPlayers);
@@ -118,12 +119,11 @@ bool Table::newRound() {
 	return true;
 }
 
-int Table::assignSpecialRoles(unsigned long round) {
+int Table::assignDealerAndBlinds(unsigned long round) {
 	int blinds = 0;
 	try {
-		dealer = players.at(round);
 		if (output)
-			std::cout << "Dealer: " << dealer->getName() << std::endl;
+			std::cout << "Dealer: " << players.at(round)->getName() << std::endl;
 		for (int p = 1; p < numOfPlayers; p++)
 			if (players.at((round + p) % numOfPlayers)->isPlaying()) {
 				if (blinds == 0) {
@@ -199,7 +199,7 @@ void Table::playRound(unsigned long startPlayer, unsigned long initRaise/* = 0*/
 //            exit(12);
 //        }
 		if (players.at(p)->isPlaying() && !players.at(p)->isAllIn()) {
-			std::vector<double> tableInfo(activePlayers - 1 + 4);
+			std::vector<double> tableInfo(NeuralNetwork::numOfInputs);
 			getTableInfo(tableInfo, p); // Table info to pass to player, see getTableInfo()
 			playerAction = players.at(p)->play(tableInfo); // Get what the player decided to do
 			if (playerAction == -1) { // Fold
@@ -260,6 +260,7 @@ void Table::splitPot() {
 		}
 	} catch (const std::exception &e) {
 		std::cout << "Split 1" << std::endl;
+		std::cout << &e << std::endl;
 	}
 
 	try {
@@ -299,29 +300,19 @@ void Table::splitPot() {
 void Table::getTableInfo(std::vector<double> &tableInfo, unsigned long currPlayer) {
 	tableInfo.at(0) = lastRaise;
 	tableInfo.at(1) = pot;
-	tableInfo.at(2) = activePlayers - 1; // Active players other than the player
-	tableInfo.at(3) = players.at(currPlayer)->getHandPotential(communityCards);
+	tableInfo.at(2) = players.at(currPlayer)->getHandPotential(communityCards);
 	unsigned long opp = 0;
-	for (size_t p = 0; p < numOfPlayers; p++)
+	for (size_t p = 0; p < numOfPlayers; p++) {
 		try {
-			if (players.at(p)->isPlaying() && p != currPlayer) { // Write the money each player has, for NN evaluation
-				tableInfo.at(opp + 4) = players.at(p)->getMoney();
+			if (p != currPlayer) { // Write the money each player has, and if they are playing, for NN evaluation
+				tableInfo.at(opp + 3) = players.at(p)->getMoney();
+				opp++;
+				tableInfo.at(opp + 3) = players.at(p)->isPlaying();
 				opp++;
 			}
 		} catch (std::out_of_range &e) {
-			std::cout << "\nP: " << p << std::endl;
-			std::cout << "Opp: " << opp << std::endl;
-			std::cout << "TableInfo: " << tableInfo.size() << std::endl;
-			std::cout << "ActivePlayers: " << activePlayers << std::endl;
-			for (size_t i = 0; i < numOfPlayers; i++) std::cout << players.at(i)->isPlaying() << " ";
-			std::cout << std::endl;
-//            for (int i = 0; i < numOfPlayers; i++) std::cout << players.at(i) << " ";
-//            std::cout << std::endl;
-			for (size_t i = 0; i < numOfPlayers; i++) std::cout << players.at(i)->isAllIn() << " ";
-			std::cout << std::endl;
-			std::cout << "Player: " << p << std::endl;
-			std::cout << "Curr player: " << currPlayer << std::endl;
-			std::cout << e.what() << std::endl;
+			std::cout << "Out of range in getTableInfo" << std::endl;
 			throw e;
 		}
+	}
 }

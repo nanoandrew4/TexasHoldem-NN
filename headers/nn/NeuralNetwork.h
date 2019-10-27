@@ -101,6 +101,8 @@ public:
 		NeuralNetwork::neuronsPerLayer = newNeuronsPerLayer;
 	}
 
+	static unsigned int numOfInputs;
+
 private:
 	/**
 	 * For our purposes, the number of neurons in a layer will not exceed 128 because more connections doesn't improve
@@ -120,7 +122,7 @@ private:
 	void forward(const std::vector<double> &input);
 
 	// Sigmoid function (standard in NN implementations)
-	double sigmoid(const double d);
+	double sigmoid(double d);
 
 	// Inverse sigmoid (reverses the sigmoid operation, used for raises)
 	double invSigmoid(double d);
